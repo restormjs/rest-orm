@@ -1,0 +1,29 @@
+{
+  "name": "restormjs",
+  "version": "0.0.1",
+  "description": "A thin, fast and secure REST service to database objects",
+  "main": "src/www",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "start": "node src/www"
+  },
+  "dependencies": {
+    "pg": "^8.5.1",
+    "http-errors": "^1.8.0",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0",
+    "cookie-parser": "^1.4.5",
+    "useragent": "^2.3.0",
+    "cors": "^2.8.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/restormjs/restormjs.git"
+  },
+  "author": "Oleksandr Minaiev (aleksminaiev@gmail.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/restormjs/restormjs/issues"
+  },
+  "homepage": "https://github.com/restormjs/restormjs#readme"
+}
