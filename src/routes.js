@@ -17,8 +17,8 @@ var spec_resp
         spec[key] = JSON.parse(fs.readFileSync(paths[key]))
     })
     if (!spec['/'])
-        throw 'no root path in config paths, add ROOT (/) entry'
-    spec_resp = spec // for now
+        throw 'no root spec in config paths, add ROOT (/) entry'
+    spec_resp = spec // TODO: obfuscate db info
 }
 
 router.get('/', function(req, res, next) {
@@ -35,6 +35,7 @@ router.post('/*', cors(corsOptions), function(req, res, next) {
 router.patch('/*', cors(corsOptions), function(req, res, next) {
     process(req, res)
 });
+
 router.delete('/*', cors(corsOptions), function(req, res, next) {
     process(req, res)
 });
