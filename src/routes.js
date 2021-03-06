@@ -8,7 +8,7 @@ const cors = require('cors')
 const config = require('./config');
 const filters = require('./filters')
 
-const corsOptions = { origin: config.api.cors.origin }
+const corsOptions = { origin: config.server.cors.origin }
 
 var spec = {}
 var spec_resp
@@ -91,7 +91,7 @@ function process(req, res) {
         if (paths.length > i + 1) {
             var id = paths[++i]
             if (has_field(api, 'id')) {
-                const err = filters.add_filter(query, 'id', id)
+                const err = filters.add_filter(query, 'id', id, 'id')
                 if (err) {
                     return error_response(res, 400, err)
                 }
@@ -165,7 +165,7 @@ function before_read(req, q) {
 }
 
 function before_update(req, q) {
-    var id = q.filters.find(f => f.field === 'id')
+    var id = q.filters.find(f => f.op === 'id')
     if (!id || !id.val) {
         return 'id is a required parameter'
     }
@@ -178,7 +178,7 @@ function before_update(req, q) {
 }
 
 function before_delete(req, q) {
-    var id = q.filters.find(f => f.field === 'id')
+    var id = q.filters.find(f => f.op === 'id')
     if (!id || !id.val) {
         return 'id is a required parameter'
     }

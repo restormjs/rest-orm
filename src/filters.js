@@ -19,7 +19,7 @@ Object.keys(config.api.filters).forEach(api_op => {
                 if (!tokens || tokens.length != 2)
                     throw new Error(`Was not able to parse config filter expression ${cf} for: ${cfs}`)
 
-                const op = tokens[0].toUpperCase()
+                const op = tokens[0].toLowerCase()
                 const parts = tokens[1].match(cf_regex);
                 const min = parseInt(parts[1])
                 const range = parts[2]
@@ -53,62 +53,36 @@ Object.keys(config.api.filters).forEach(api_op => {
 
 function filter_function(op) {
     switch (op) {
-        case 'ID': return id;
-        case 'EQ': return eq;
-        case 'NE': return ne;
-        case 'GT': return gt;
-        case 'GE': return ge;
-        case 'LT': return lt;
-        case 'LE': return le;
-        case 'LIKE': return like;
-        case 'OFFSET': return offset;
-        case 'LIMIT': return limit;
-        case 'DESC': return order;
-        case 'ASC': return order;
+        case 'id': return field_op_val;
+        case 'in': return field_op_arr;
+        case 'eq': return field_op_val;
+        case 'ne': return field_op_val;
+        case 'gt': return field_op_val;
+        case 'ge': return field_op_val;
+        case 'lt': return field_op_val;
+        case 'le': return field_op_val;
+        case 'like': return field_op_val;
+        case 'offset': return op_numval;
+        case 'limit': return op_numval;
+        case 'desc': return order;
+        case 'asc': return order;
         default: throw new Error(`undefined operation ${id}`)
     }
 }
 
-function id(query, val, fdesc) {
-    return {field: 'id', op: fdesc.name, val: val}
+function op_numval(fdesc, query, val) {
+    const num = parseInt(val)
+    return op_val(fdesc, query, num)
 }
 
-function eq(query, val, fdesc) {
-    throw new Error('Unimplemented')
+function field_op_val(fdesc, query, val, field) {
+    return {field: field, op: fdesc.name, val:val}
 }
 
-function ne(query, val, fdesc) {
-    throw new Error('Unimplemented')
-}
-
-function gt(query, val, fdesc) {
-    throw new Error('Unimplemented')
-}
-
-
-function ge(query, val, fdesc) {
-    throw new Error('Unimplemented')
-}
-
-function lt(query, val, fdesc) {
-    throw new Error('Unimplemented')
-}
-
-function le(query, val, fdesc) {
-    throw new Error('Unimplemented')
-}
-
-function like(query, val, fdesc) {
-    throw new Error('Unimplemented')
-}
-
-function offset(query, val, fdesc) {
-    throw new Error('Unimplemented')
-}
-
-
-function limit(query, val, fdesc) {
-    throw new Error('Unimplemented')
+function field_op_arr(fdesc, query, val, field) {
+    // TBD: make double quotes do their difference
+    const arr = val.split(',').map(e => e.replace(/^"|"$/g, ''))
+    return {field: field, op: fdesc.name, val:arr}
 }
 
 function order(query, val, fdesc) {
@@ -122,7 +96,6 @@ function order(query, val, fdesc) {
     }
     return {op: fdesc.name, val: fields}
 }
-
 
 function parse(req, query) {
     for (let param in req.query) {
@@ -152,20 +125,20 @@ function parse(req, query) {
                 return `could not identify operation from param: ${param}`
             }
             // assemble and validate filter
-            return add_filter(query, op, val)
+            return add_filter(query, op, val, field)
         }
     }
 }
 
-function add_filter(query, op, val) {
+function add_filter(query, op, val, field) {
     if (!query.operation) {
-        throw new Error('There is no query operation defined')
+        return 'There is no query operation defined'
     }
-    const builder = filters[query.operation][op.toUpperCase()]
+    const builder = filters[query.operation][op.toLowerCase()]
     if (!builder || builder === undefined) {
         return `filter ${op} is not supported by ${query.operation} operation`
     }
-    const filter = builder.get(query, val, builder)
+    const filter = builder.get(builder, query, val, field)
     let err = validate_limits(query, filter)
     if (err)
         return err

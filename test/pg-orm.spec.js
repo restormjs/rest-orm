@@ -13,7 +13,7 @@ const request = require("request");
 const proxyquire =  require('proxyquire')
 
 let server;
-let orm = {'@global': true}
+let client = {public: {}, protected: {}, '@global': true}
 const URL_BASE = 'http://localhost:3002'
 
 describe('HTTP queries', function() {
@@ -32,30 +32,24 @@ describe('HTTP queries', function() {
                             '/': './test/test-api-spec.json'
                         },
                         path_prefix: '/api'
-                    }
+                    },
+                    orm: {
+                        provider: './provider/pg-orm'
+                    },
                 }, '@global': true
             },
-            '../src/provider/inmem-orm': orm
+            '../src/provider/pg-client': client
         });
     });
 
-    scenarios.tests.forEach((t) => {
+    scenarios.tests.filter(t => t.orm).forEach(t => {
         it(`Test ${t.args.m} ${t.args.url} responds ${t.response.status}`, function(done) {
-            let orm_executed = false
-            orm.execute = function (query, done) {
-                orm_executed = true
-                expect(query.api.path).to.equal(t.orm.api)
-                expect(query.operation).to.equal(t.orm.op)
-                if (t.orm.filters)
-                    expect(query.filters).to.deep.equal(t.orm.filters)
-                else
-                    expect(query.filters).to.be.empty
-                if (t.orm.payload)
-                    expect(query.payload).to.deep.equal(t.orm.payload)
-                else
-                    expect(query.payload).to.be.undefined
-
-                done(null, t.response.body ? t.response.body: null)
+            client.public.query = function (sql, params) {
+                expect(sql).to.equal(t.pg.sql)
+                expect(params).to.deep.equal(t.pg.params)
+                return new Promise((resolve) => {
+                    resolve({rows: [t.response.body]})
+                })
             }
 
             request({
@@ -74,7 +68,6 @@ describe('HTTP queries', function() {
                     else
                         expect(body).to.be.undefined
 
-                    expect(orm_executed).to.be.equal(t.orm != undefined, "execute should not be called")
                     done();
                 });
         });

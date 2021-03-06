@@ -12,15 +12,15 @@
       }
     },
     "orm": {
-      "provider": "./provider/pg-orm",
-      "db": {
-        "public": {
-          "user": "restormjs",
-          "host": "localhost",
-          "database": "restormjs",
-          "password": "restormjs",
-          "port": 5432
-        }
+      "provider": "./provider/pg-orm"
+    },
+    "db": {
+      "public": {
+        "user": "restormjs",
+        "host": "localhost",
+        "database": "restormjs",
+        "password": "restormjs",
+        "port": 5432
       }
     }
   }

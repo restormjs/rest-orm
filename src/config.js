@@ -9,13 +9,13 @@ const default_config = {
         max_limit: 100,
         filters: {
             C: '',
-            R: 'id:0-1,eq:0+,ne:0+,gt:0+,ge:0+,lt:0+,le:0+,like:0+,offset:0-1,limit:0-1,desc:0-1,asc:0-1',
+            R: 'id:0-1,eq:0+,ne:0+,gt:0+,ge:0+,lt:0+,le:0+,like:0+,in:0+,offset:0-1,limit:0-1,desc:0-1,asc:0-1',
             U: 'id:1',
             D: 'id:1'
         }
     },
     orm: {
-        provider: './provider/pg-orm'
+        provider: './provider/inmem-orm'
     }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "restormjs",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "A thin, fast and secure REST service to database objects",
   "main": "bin/www",
   "scripts": {
@@ -11,7 +11,6 @@
     "restorm-pg-generate": "./bin/pg2api.js"
   },
   "dependencies": {
-    "chai": "^4.3.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "morgan": "^1.10.0",
@@ -30,8 +29,8 @@
   },
   "homepage": "https://github.com/restormjs/restormjs#readme",
   "devDependencies": {
+    "chai": "^4.3.0",
     "chai-http": "^4.3.0",
-    "chai-json": "^1.0.0",
     "mocha": "^8.3.0",
     "mockdate": "^3.0.2",
     "proxyquire": "^2.1.3"

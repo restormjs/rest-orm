@@ -1,33 +1,8 @@
-const { Client } = require('pg')
-const config = require('../config');
-
-// TBD - use pools
-const client = new Client({
-    user: config.db.public.user,
-    host: config.db.public.host,
-    database: config.db.public.database,
-    password: config.db.public.password,
-    port: config.db.public.port,
-})
-
-// TBD - use pools
-var client_protected
-if (config.db.protected) {
-  client_protected = new Client({
-    host: 'localhost',
-    database: 'horizon',
-    user: 'api_high',
-    password: 'api_high',
-    port: 5432
-  })
-  client_protected.connect();
-}
+const client = require('./pg-client')
 
 
-client.connect()
-
-const sqlprep = {C:insert, R: select, U: update}
-const system_fields = ['id', 'user_id', 'created', 'updated']
+const sqlprep = {C:insert, R: select, U: update, D: delete_}
+const system_fields = ['id']
 
 async function execute(query, done) {
   try {
@@ -40,18 +15,18 @@ async function execute(query, done) {
           if (!query.auth.token || !query.auth.device) {
             done('auth required')
           } else {
-            client_protected.query('SELECT * from auth.authenticate($1, $2)', [query.auth.token, query.auth.device])
+            client.protected.query('SELECT * from auth.authenticate($1, $2)', [query.auth.token, query.auth.device])
               .then(result => {
                 if (result.rows[0].authenticate) {
                   console.log(`authenticated user ${result.rows[0].authenticate}`)
                   try {
-                    client_protected.query(sql, params)
+                    client.protected.query(sql, params)
                       .then(res => {
-                        client_protected.query('SELECT * from auth.end_authentication()')
+                        client.protected.query('SELECT * from auth.end_authentication()')
                         done(null, unfold(res.rows, query))
                       })
                   } catch (err) {
-                    client_protected.query('SELECT * from auth.end_authentication()')
+                    client.protected.query('SELECT * from auth.end_authentication()')
                     done(`query error: ${err}`)
                   }
                 } else {
@@ -61,7 +36,7 @@ async function execute(query, done) {
               .catch(e => done(`authentication error: ${e}`))
           }
         } else { // public api
-          client.query(sql, params)
+          client.public.query(sql, params)
             .then(res => {
               done(null, unfold(res.rows, query))
             })
@@ -71,7 +46,9 @@ async function execute(query, done) {
     })
   }
   catch (e) {
+    console.error(e)
     done(`Unable to process api ${query.api.name} - ${e}`)
+
   }
 }
 
@@ -86,33 +63,18 @@ function unfold(rows, q) {
 
 function select(q, done) {
   let limit = 20
-  let  sql_params = []
   const columns = Object.values(q.api.fields).map(function(v) {return v.column_name + ' as ' + v.name})
-  let where = ''
+  let collector = {where: [], params: []}
   if (q.filters.length > 0) {
-    let w = []
     q.filters.forEach(function (f) {
-      let sqlop = getFilterOperation(f.op)
-      switch(sqlop) {
-        case 'IN': {
-          let set = f.val.split(',').map(e => e.replace(/^"|"$/g, ''))
-          let i = 0
-          let params = set.map(p => `$${++i}`)
-          w.push(`${q.api.fields[f.field].column_name} ${sqlop} (${params.join(', ')})`)
-          sql_params = sql_params.concat(set)
-          limit = set.length > 100 ? 100 : set.length
-          break
-        }
-        default: {
-          w.push(`${q.api.fields[f.field].column_name} ${sqlop} $${w.length + 1}`)
-          sql_params.push(getFilterValue(sqlop, f.val))
-        }
+      let sqlop = sql_filter_operation[f.op]
+      if (sqlop.where) {
+        sqlop.add(sqlop, q, f, collector)
       }
     })
-    where = `WHERE ${w.join(' AND ')}`
   }
-  const sql = `SELECT ${columns.join(', ')} FROM  ${q.api.db_schema}.${q.api.db_table} ${where} LIMIT ${limit} OFFSET 0`
-  done(sql, sql_params)
+  const sql = `SELECT ${columns.join(', ')} FROM ${q.api.db_schema}.${q.api.db_table} ${where(collector)} LIMIT ${limit} OFFSET 0`
+  done(sql, collector.params)
 }
 
 function insert(q, done) {
@@ -146,16 +108,37 @@ function update(q, done) {
       sql_params.push((typeof p === "object" || Array.isArray(p)) ? JSON.stringify(p) : p)
     }
   })
-  let sql = `UPDATE ${q.api.db_schema}.${q.api.db_table} SET ${columns.join(', ')} WHERE ${q.api.fields['id'].column_name} = $${++i}`
-  sql_params.push(q.filters.find(f => f.field === 'id').val)
+  let collector = {where: [], params: sql_params}
+  if (q.filters.length > 0) {
+    q.filters.forEach(function (f) {
+      let sqlop = sql_filter_operation[f.op]
+      if (sqlop.where) {
+        sqlop.add(sqlop, q, f, collector)
+      }
+    })
+  }
+  const sql = `UPDATE ${q.api.db_schema}.${q.api.db_table} SET ${columns.join(', ')} ${where(collector)}`
   done(sql, sql_params)
 }
 
-function getFilterValue(op, v) {
-  switch(op) {
-    case 'LIKE', 'ILIKE': return `%${v}%`
+function delete_(q, done) {
+  let collector = {where: [], params: []}
+  if (q.filters.length > 0) {
+    q.filters.forEach(function (f) {
+      let sqlop = sql_filter_operation[f.op]
+      if (sqlop.where) {
+        sqlop.add(sqlop, q, f, collector)
+      }
+    })
   }
-  return v
+  const sql = `DELETE FROM ${q.api.db_schema}.${q.api.db_table} ${where(collector)}`
+  done(sql, collector.params)
+}
+
+function where(collector) {
+  return collector.where.length
+      ? `WHERE ${collector.where.join(' AND ')}`
+      : ''
 }
 
 function isEmpty(o) {
@@ -164,14 +147,42 @@ function isEmpty(o) {
     || (Array.isArray(o) && o.length === 0)
 }
 
-function getFilterOperation(op) {
-    switch (op.toUpperCase()) {
-      case 'EQ': return '='
-      case 'LIKE': return 'ILIKE'
-      case 'ILIKE': return 'ILIKE'
-      case 'IN': return 'IN'
-      default: throw "Unexpected filter operation '" + op + "'"
-    }
+const sql_filter_operation = {
+  id: {where: true, op: '=', add: field_val},
+  eq: {where: true, op: '=', add: field_val},
+  ne: {where: true, op: '!=', add: field_val},
+  gt: {where: true, op: '>', add: field_val},
+  ge: {where: true, op: '>=', add: field_val},
+  lt: {where: true, op: '<', add: field_val},
+  le: {where: true, op: '<=', add: field_val},
+  in: {where: true, op: 'IN', add: in_val},
+  like: {where: true, op: 'LIKE', add: field_val},
+  offset: {offset: true, op: 'OFFSET'},
+  limit: {limit: true, op: 'LIMIT'},
+  desc: {order: true, op: 'DESC'},
+  asc: {order: true, op: 'ASC'}
+}
+
+function field_val(sqlop, q, f, cl) {
+  cl.where.push(`${q.api.fields[f.field].column_name} ${sqlop.op} $${cl.params.length +1}`)
+  cl.params.push(wrap_val(sqlop, f.val))
+}
+
+function in_val(sqlop, q, f, cl) {
+  if (!Array.isArray(f.val)) {
+    throw new Error(`${sqlop.op} requires an array of parameters`)
+  }
+  let i = cl.params.length
+  const inlist = f.val.map(v => `$${++i}`)
+  cl.where.push(`${q.api.fields[f.field].column_name} ${sqlop.op} (${inlist.join(', ')})`)
+  cl.params.concat(f.val.map(v => wrap_val(sqlop, v)))
+}
+
+function wrap_val(sqlop, v) {
+  switch(sqlop.op) {
+    case 'LIKE': return `%${v}%`
+  }
+  return v
 }
 
 module.exports.execute = execute;

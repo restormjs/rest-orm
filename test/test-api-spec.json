@@ -38,7 +38,7 @@
           "name":"id",
           "type":"number",
           "is_required":false,
-          "column_name":"user_id"
+          "column_name":"account_id"
         },
         "created_on":{
           "name":"created_on",
@@ -50,7 +50,7 @@
           "name":"name",
           "type":"string",
           "is_required":true,
-          "column_name":"email"
+          "column_name":"name"
         },
         "last_login":{
           "name":"last_login",
