@@ -53,6 +53,7 @@ Object.keys(config.api.filters).forEach(api_op => {
 
 function filter_function(op) {
     switch (op) {
+        case 'ID': return id;
         case 'EQ': return eq;
         case 'NE': return ne;
         case 'GT': return gt;
@@ -64,41 +65,50 @@ function filter_function(op) {
         case 'LIMIT': return limit;
         case 'DESC': return order;
         case 'ASC': return order;
+        default: throw new Error(`undefined operation ${id}`)
     }
 }
 
+function id(query, val, fdesc) {
+    return {field: 'id', op: fdesc.name, val: val}
+}
+
 function eq(query, val, fdesc) {
+    throw new Error('Unimplemented')
 }
 
 function ne(query, val, fdesc) {
+    throw new Error('Unimplemented')
 }
 
-
 function gt(query, val, fdesc) {
+    throw new Error('Unimplemented')
 }
 
 
 function ge(query, val, fdesc) {
+    throw new Error('Unimplemented')
 }
-
 
 function lt(query, val, fdesc) {
+    throw new Error('Unimplemented')
 }
-
 
 function le(query, val, fdesc) {
+    throw new Error('Unimplemented')
 }
-
 
 function like(query, val, fdesc) {
+    throw new Error('Unimplemented')
 }
 
-
 function offset(query, val, fdesc) {
+    throw new Error('Unimplemented')
 }
 
 
 function limit(query, val, fdesc) {
+    throw new Error('Unimplemented')
 }
 
 function order(query, val, fdesc) {
@@ -142,27 +152,33 @@ function parse(req, query) {
                 return `could not identify operation from param: ${param}`
             }
             // assemble and validate filter
-            const builder = filters[query.operation][op.toUpperCase()]
-            if (!builder || builder === undefined) {
-                return `filter ${op} is not supported by ${query.operation}`
-            }
-            try {
-                const filter = builder.get(query, val, builder)
-                let err = validate_limits(query, filter)
-                if (err)
-                    return err
-                query.filters.push(filter)
-            }
-            catch (e) {
-                return e
-            }
+            return add_filter(query, op, val)
         }
     }
 }
 
+function add_filter(query, op, val) {
+    if (!query.operation) {
+        throw new Error('There is no query operation defined')
+    }
+    const builder = filters[query.operation][op.toUpperCase()]
+    if (!builder || builder === undefined) {
+        return `filter ${op} is not supported by ${query.operation} operation`
+    }
+    const filter = builder.get(query, val, builder)
+    let err = validate_limits(query, filter)
+    if (err)
+        return err
+    query.filters.push(filter)
+
+}
+
 function validate_limits(query, filter) {
-    throw "implement me"
+    if (query.filters.length > config.api.max_filters) {
+        return "Exceeded maximum allowed number of filters"
+    }
 }
 
 module.exports.parse = parse;
+module.exports.add_filter = add_filter;
 

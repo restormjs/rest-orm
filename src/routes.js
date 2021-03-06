@@ -84,19 +84,23 @@ function process(req, res) {
             }
             res.setHeader("Cache-Control", "no-store")
         }
+        // validate operation
+        query.operation = get_operation(req)
+
         // is there a path param
         if (paths.length > i + 1) {
             var id = paths[++i]
-            if (hasField(api, 'id')) {
-                query.filters.push({field: 'id', op: 'eq', val: id})
+            if (has_field(api, 'id')) {
+                const err = filters.add_filter(query, 'id', id)
+                if (err) {
+                    return error_response(res, 400, err)
+                }
             }
         }
         ++i // next level
         // this was the last level so query against this api
         if (paths.length === i) {
             query.api = api
-            // validate operation
-            query.operation = get_operation(req)
             if (!api.operations.includes(query.operation)) {
                 return error_response(res,404, 'Not Found')
             }
@@ -183,7 +187,7 @@ function before_delete(req, q) {
     }
 }
 
-function hasField(api, field) {
+function has_field(api, field) {
     return Object.keys(api.fields).find(f => f === field) !== undefined
 }
 

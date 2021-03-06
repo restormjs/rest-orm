@@ -41,7 +41,7 @@ describe('HTTP queries', function() {
 
     const tests = [ {
         args: { m: 'GET', url: '/api/accounts/1' },
-        orm: { api: 'accounts', op: 'R', filters: [{"field": "id", "op": "eq", "val": "1"}] },
+        orm: { api: 'accounts', op: 'R', filters: [{"field": "id", "op": "ID", "val": "1"}] },
         response: {status: 200, body: {id: 1, name: 'account1'}}
     }, {
         args: { m: 'POST', url: '/api/accounts', payload: {id: 1, name: 'account1'} },
@@ -49,11 +49,11 @@ describe('HTTP queries', function() {
         response: {status: 200, body: {id: 3}}
     }, {
         args: { m: 'PATCH', url: '/api/accounts/1', payload: {id: "1", name: 'account1'} },
-        orm: { api: 'accounts', op: 'U', filters: [{"field": "id", "op": "eq", "val": "1"}], payload: {id: "1", name: 'account1'} },
+        orm: { api: 'accounts', op: 'U', filters: [{"field": "id", "op": "ID", "val": "1"}], payload: {id: "1", name: 'account1'} },
         response: {status: 204}
     }, {
         args: { m: 'DELETE', url: '/api/accounts/1'},
-        orm: { api: 'accounts', op: 'D', filters: [{"field": "id", "op": "eq", "val": "1"}] },
+        orm: { api: 'accounts', op: 'D', filters: [{"field": "id", "op": "ID", "val": "1"}] },
         response: {status: 204}
     }, {
         args: { m: 'GET', url: '/api/something/' },
@@ -69,7 +69,7 @@ describe('HTTP queries', function() {
         response: {status: 404, body: { message: 'Not Found', 'status': 404, timestamp: mock_date}}
     }, {
         args: { m: 'POST', url: '/api/accounts/1', payload: {id: 1, name: 'account1'} },
-        response: {status: 400, body: { message: 'Create object will not accept any filters: id', 'status': 400, timestamp: mock_date}}
+        response: {status: 400, body: { message: 'filter id is not supported by C operation', 'status': 400, timestamp: mock_date}}
     }, {
         args: { m: 'PATCH', url: '/api/accounts/2', payload: {id: "1", name: 'account1'} },
         response: {status: 400, body: { message: 'parameter id should match payload', 'status': 400, timestamp: mock_date}}
@@ -78,7 +78,7 @@ describe('HTTP queries', function() {
         response: {status: 400, body: { message: 'id is a required parameter', 'status': 400, timestamp: mock_date}}
     }, {
         args: { m: 'DELETE', url: '/api/accounts/1?name=account1'},
-        response: {status: 400, body: { message: 'filter eq is not supported by D', 'status': 400, timestamp: mock_date}}
+        response: {status: 400, body: { message: 'filter eq is not supported by D operation', 'status': 400, timestamp: mock_date}}
     },
 
     ];

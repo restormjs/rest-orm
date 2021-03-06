@@ -27,7 +27,7 @@ npm install restormjs
 # Quick test run, 100% passed
 npm test
 
-# Generate API specification
+# Generate API specification (Use your database)
 restorm-pg-generate --user=restormjs --host=localhost --db=restormjs --
 passwd=restormjs --port=5432 --schema=public --output=api-spec.json
 
