@@ -1,11 +1,12 @@
-var express = require('express');
-var url = require("url");
-var router = express.Router();
+const express = require('express');
+const url = require("url");
+const router = express.Router();
 const orm = require('./orm');
 const fs = require('fs');
 const useragent = require('useragent')
-let cors = require('cors')
+const cors = require('cors')
 const config = require('./config');
+const filters = require('./filters')
 
 const corsOptions = { origin: config.api.cors.origin }
 
@@ -42,10 +43,13 @@ router.delete('/*', cors(corsOptions), function(req, res, next) {
 
 router.options('/*', cors(corsOptions))
 
-const opFilters = {C: beforeCreate, R: beforeRead, U: beforeUpdate, D: beforeDelete }
+const validators = {C: before_create, R: before_read, U: before_update, D: before_delete }
 
 function process(req, res) {
     res.setHeader("Content-Type", "application/json");
+    if (req.query.length > config.server.max_params) {
+        error_response(res, 400, "Query exceeded max allowed parameters number")
+    }
     var u = url.parse(req.url)
     var query = {
         filters: []
@@ -92,7 +96,7 @@ function process(req, res) {
         if (paths.length === i) {
             query.api = api
             // validate operation
-            query.operation = getOperation(req)
+            query.operation = get_operation(req)
             if (!api.operations.includes(query.operation)) {
                 return error_response(res,404, 'Not Found')
             }
@@ -107,8 +111,14 @@ function process(req, res) {
         query.payload = req.body
     }
 
+    // Parse all filters
+    let err = filters.parse(req, query)
+    if (err) {
+        return error_response(res, 400, err)
+    }
+
     // Method specific filters and validation
-    const err = opFilters[query.operation](req, query)
+    err = validators[query.operation](req, query)
     if (err) {
         return error_response(res,400, err)
     }
@@ -120,15 +130,22 @@ function process(req, res) {
         if (errors) {
             return error_response(res,400, errors)
         }
-        else {
+        else if (data) {
             res.status(200).send(data)
+        }
+        else {
+            res.status(204).send()
         }
     })
 }
 
-function beforeCreate(req, q) {
+function before_create(req, q) {
     if (!q.payload) {
         return 'json payload is required'
+    }
+
+    if (q.filters.length) {
+        return `Create object will not accept any filters: ${q.filters.map(f => f.field)}`
     }
     const data = q.payload
     const fields = q.api.fields
@@ -136,48 +153,41 @@ function beforeCreate(req, q) {
         .filter(f => fields[f].is_required && !(['id'].includes(f)))
         .find(f => !data[fields[f].name])
     if (field) {
-        return `${field} is a required param`
+        return `${field} is a required field`
     }
 }
 
-function beforeRead(req, q) {
-    // Query Filters
-    for (let param in req.query) {
-        if (req.query.hasOwnProperty(param) && q.api.fields[param]) {
-            var filter = {field: q.api.fields[param].name}
-            var val = req.query[param]
-            var i = val.indexOf('=')
-            if (i > -1) {
-                filter.op = val.substr(0, i)
-                filter.val = val.substr(i+1)
-            }
-            else {
-                filter.op = 'eq'
-                filter.val = val
-            }
-            q.filters.push(filter);
-        }
-    }
+function before_read(req, q) {
 }
 
-function beforeUpdate(req, q) {
-    if (!q.filters.find(f => f.field === 'id' && f.val)) {
+function before_update(req, q) {
+    var id = q.filters.find(f => f.field === 'id')
+    if (!id || !id.val) {
         return 'id is a required parameter'
     }
     if (!q.payload) {
         return 'no data to update'
     }
+    if (q.payload.id && q.payload.id !== id.val) {
+        return 'parameter id should match payload'
+    }
 }
 
-function beforeDelete(req, q) {
-
+function before_delete(req, q) {
+    var id = q.filters.find(f => f.field === 'id')
+    if (!id || !id.val) {
+        return 'id is a required parameter'
+    }
+    if (q.payload) {
+        return 'no payload expected'
+    }
 }
 
 function hasField(api, field) {
     return Object.keys(api.fields).find(f => f === field) !== undefined
 }
 
-function getOperation(req) {
+function get_operation(req) {
     switch (req.method) {
         case 'POST': return 'C';
         case 'GET': return 'R';
@@ -195,9 +205,9 @@ function get_device(user_agent) {
 function error_response(res, status, message) {
     res.status(status || 500);
     res.send({
-        timestamp: new Date(),
-        status: status || 500,
         message: message,
+        status: status || 500,
+        timestamp: new Date(),
     })
 }
 

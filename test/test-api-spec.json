@@ -23,12 +23,6 @@
           "type":"number",
           "is_required":true,
           "column_name":"role_id"
-        },
-        "user_id":{
-          "name":"user_id",
-          "type":"number",
-          "is_required":true,
-          "column_name":"user_id"
         }
       }
     },
@@ -49,11 +43,11 @@
         "created_on":{
           "name":"created_on",
           "type":"string",
-          "is_required":true,
+          "is_required":false,
           "column_name":"created_on"
         },
-        "email":{
-          "name":"email",
+        "name":{
+          "name":"name",
           "type":"string",
           "is_required":true,
           "column_name":"email"
@@ -67,13 +61,13 @@
         "password":{
           "name":"password",
           "type":"string",
-          "is_required":true,
+          "is_required":false,
           "column_name":"password"
         },
         "username":{
           "name":"username",
           "type":"string",
-          "is_required":true,
+          "is_required":false,
           "column_name":"username"
         }
       }

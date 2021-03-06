@@ -1,4 +1,4 @@
-# restormjs [DRAFT]
+# restormjs [DRAFT][WIP][BROKEN][WAIT]
 A thin, fast, flexible and secure REST service to database objects.
 
 ## Problem
@@ -24,12 +24,18 @@ This topic will go through a slow evolution process, as I (and hopefully communi
 ```
 npm install restormjs
 
+# Quick test run, 100% passed
+npm test
+
 # Generate API specification
 restorm-pg-generate --user=restormjs --host=localhost --db=restormjs --
 passwd=restormjs --port=5432 --schema=public --output=api-spec.json
 
 # TBD override config
 npm start
+
+# Verify that the server is up and running
+curl http://localhost:3002/api
 ```
 
 ## Configuration
@@ -39,6 +45,10 @@ npm start
 ## API Specification
 
 ## Contributing
+
+### Default limits
+# offset, limit
+# request payload 
 
 ## Roadmap
 1. Tests / Comments / Readme
@@ -60,5 +70,6 @@ npm start
 ----
 Separate Project:
 1. UI Service generator from spec
-2. DB object and service - full cycle gen
-3. Hot Swap
+2. API Versioning
+3. DB object and service - full cycle gen
+4. Hot Swap

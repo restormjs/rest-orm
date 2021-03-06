@@ -1,23 +1,26 @@
 {
   "development": {
-    "api": {
+    "server":{
       "cors": {
         "origin": "http://localhost:3002"
       },
+      "max_params": 10
+    },
+    "api": {
       "paths": {
         "/": "api-spec.json"
       }
     },
     "orm": {
-      "provider": "pg"
-    },
-    "db": {
-      "public": {
-        "user": "restormjs",
-        "host": "localhost",
-        "database": "restormjs",
-        "password": "restormjs",
-        "port": 5432
+      "provider": "./provider/pg-orm",
+      "db": {
+        "public": {
+          "user": "restormjs",
+          "host": "localhost",
+          "database": "restormjs",
+          "password": "restormjs",
+          "port": 5432
+        }
       }
     }
   }
