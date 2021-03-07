@@ -175,7 +175,7 @@ function in_val(sqlop, q, f, cl) {
   let i = cl.params.length
   const inlist = f.val.map(v => `$${++i}`)
   cl.where.push(`${q.api.fields[f.field].column_name} ${sqlop.op} (${inlist.join(', ')})`)
-  cl.params.concat(f.val.map(v => wrap_val(sqlop, v)))
+  cl.params.push.apply(cl.params, f.val.map(v => wrap_val(sqlop, v)))
 }
 
 function wrap_val(sqlop, v) {

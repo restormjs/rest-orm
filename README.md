@@ -1,6 +1,8 @@
+
 # restormjs [DRAFT][WIP][BROKEN][WAIT]
 A thin, fast, flexible and secure REST service to database objects.
 
+[![Node.js Package](https://github.com/restormjs/restormjs/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/restormjs/restormjs/actions/workflows/npm-publish.yml)
 ## Problem
 Long story short, the longer the more I realize ORM as an engineering concept is a bad antipattern. Why? It makes things messy, very quickly from the start. Unmaintainable, both db and client side. ORM does not hide persistence complexity, just delays the moment of truth. This project is about getting rid of ORM as a concept, once and hopefully forever.
 What's left? Think of it as a REST query language to a database, straight and simple.

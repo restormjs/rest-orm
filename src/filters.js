@@ -98,7 +98,7 @@ function order(query, val, fdesc) {
 }
 
 function parse(req, query) {
-    for (let param in req.query) {
+    Object.keys(req.query).forEach(param => {
         if (req.query.hasOwnProperty(param)) {
             let field = query.api.fields[param].name
             let val = req.query[param]
@@ -122,12 +122,14 @@ function parse(req, query) {
             }
             // at this point op has to be defined
             if (!op) {
-                return `could not identify operation from param: ${param}`
+                throw new Error(`could not identify operation from param: ${param}`)
             }
             // assemble and validate filter
-            return add_filter(query, op, val, field)
+            const err = add_filter(query, op, val, field)
+            if (err)
+                throw new Error(err)
         }
-    }
+    })
 }
 
 function add_filter(query, op, val, field) {

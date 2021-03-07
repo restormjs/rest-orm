@@ -16,7 +16,7 @@ let server;
 let client = {public: {}, protected: {}, '@global': true}
 const URL_BASE = 'http://localhost:3002'
 
-describe('HTTP queries', function() {
+describe('Postgresql queries', function() {
     before(() => {
         mockdate.set(mock_date)
         server = proxyquire('../bin/www', {

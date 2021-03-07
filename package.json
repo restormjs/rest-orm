@@ -1,13 +1,14 @@
 {
   "name": "restormjs",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A thin, fast and secure REST service to database objects",
   "main": "bin/www",
   "scripts": {
-    "test": "mocha --reporter spec",
+    "test": "mocha --reporter spec --timeout 10000",
     "start": "node bin/www"
   },
   "bin": {
+    "restorm-server": "./bin/www",
     "restorm-pg-generate": "./bin/pg2api.js"
   },
   "dependencies": {
@@ -16,7 +17,8 @@
     "morgan": "^1.10.0",
     "pg": "^8.5.1",
     "request": "^2.88.2",
-    "useragent": "^2.3.0"
+    "useragent": "^2.3.0",
+    "yargs": "^16.2.0"
   },
   "repository": {
     "type": "git",

@@ -41,6 +41,7 @@ describe('HTTP queries', function() {
 
     scenarios.tests.forEach((t) => {
         it(`Test ${t.args.m} ${t.args.url} responds ${t.response.status}`, function(done) {
+
             let orm_executed = false
             orm.execute = function (query, done) {
                 orm_executed = true

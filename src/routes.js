@@ -116,11 +116,15 @@ function process(req, res) {
     }
 
     // Parse all filters
-    let err = filters.parse(req, query)
-    if (err) {
-        return error_response(res, 400, err)
+    try {
+        let err = filters.parse(req, query)
+        if (err) {
+            return error_response(res, 400, err)
+        }
     }
-
+    catch (e) {
+        return error_response(res, 400, e.message)
+    }
     // Method specific filters and validation
     err = validators[query.operation](req, query)
     if (err) {
