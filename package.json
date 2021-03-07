@@ -1,6 +1,6 @@
 {
   "name": "restormjs",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A thin, fast and secure REST service to database objects",
   "main": "bin/www",
   "scripts": {
@@ -8,8 +8,8 @@
     "start": "node bin/www"
   },
   "bin": {
-    "restorm-server": "./bin/www",
-    "restorm-pg-generate": "./bin/pg2api.js"
+    "restormjs-server": "./bin/www",
+    "restormjs-pg-spec": "./bin/pg2api.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

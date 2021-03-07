@@ -63,16 +63,26 @@ function filter_function(op) {
         case 'le': return field_op_val;
         case 'like': return field_op_val;
         case 'offset': return op_numval;
-        case 'limit': return op_numval;
-        case 'desc': return order;
-        case 'asc': return order;
+        case 'limit': return limit;
+        case 'order_desc': return order;
+        case 'order_asc': return order;
         default: throw new Error(`undefined operation ${id}`)
     }
 }
 
+function limit(fdesc, query, val) {
+    let f = op_numval(fdesc, query, val)
+    if (f.val > config.api.max_limit)
+        f.val = config.api.max_limit
+    return f
+}
+
+
 function op_numval(fdesc, query, val) {
     const num = parseInt(val)
-    return op_val(fdesc, query, num)
+    if (!Number.isInteger(num) | num < 0)
+        throw new Error(`Expected positive number for ${fdesc.name}`)
+    return {op: fdesc.name, val: num}
 }
 
 function field_op_val(fdesc, query, val, field) {
@@ -85,7 +95,7 @@ function field_op_arr(fdesc, query, val, field) {
     return {field: field, op: fdesc.name, val:arr}
 }
 
-function order(query, val, fdesc) {
+function order(fdesc, query, val, field) {
     if (!val) {
         return `${fdesc.name} filter requires value`
     }
@@ -100,10 +110,12 @@ function order(query, val, fdesc) {
 function parse(req, query) {
     Object.keys(req.query).forEach(param => {
         if (req.query.hasOwnProperty(param)) {
-            let field = query.api.fields[param].name
+            let field
+            let fdesc = query.api.fields[param]
             let val = req.query[param]
             let op
-            if (field) {
+            if (fdesc) {
+                field = fdesc.name
                 // identify filter from expression
                 let i = val.indexOf('=')
                 // composite filter syntax, split actual operation and value

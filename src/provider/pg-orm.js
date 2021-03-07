@@ -1,5 +1,5 @@
 const client = require('./pg-client')
-
+const config = require('../config');
 
 const sqlprep = {C:insert, R: select, U: update, D: delete_}
 const system_fields = ['id']
@@ -62,18 +62,10 @@ function unfold(rows, q) {
 }
 
 function select(q, done) {
-  let limit = 20
-  const columns = Object.values(q.api.fields).map(function(v) {return v.column_name + ' as ' + v.name})
-  let collector = {where: [], params: []}
-  if (q.filters.length > 0) {
-    q.filters.forEach(function (f) {
-      let sqlop = sql_filter_operation[f.op]
-      if (sqlop.where) {
-        sqlop.add(sqlop, q, f, collector)
-      }
-    })
-  }
-  const sql = `SELECT ${columns.join(', ')} FROM ${q.api.db_schema}.${q.api.db_table} ${where(collector)} LIMIT ${limit} OFFSET 0`
+  let collector = {params: []}
+  const columns = Object.values(q.api.fields).map(function(v) {return v.column_name !== v.name ? v.column_name + ' as ' + v.name : v.column_name})
+  process_filters(q, collector)
+  const sql = `SELECT ${columns.join(', ')} FROM ${q.api.db_schema}.${q.api.db_table}${where(collector.where)}${limits(collector.limit)}${order_by(collector.order)}`
   done(sql, collector.params)
 }
 
@@ -98,47 +90,62 @@ function insert(q, done) {
 }
 
 function update(q, done) {
-  const sql_params = []
+  let collector = {params: []}
   const columns = []
   let i = 0
   Object.keys(q.payload).filter(k => !(system_fields.includes(k))).forEach(k => {
     const p = q.payload[k]
     if (!isEmpty(p)) {
       columns.push(`${q.api.fields[k].column_name} = $${++i}`)
-      sql_params.push((typeof p === "object" || Array.isArray(p)) ? JSON.stringify(p) : p)
+      collector.params.push((typeof p === "object" || Array.isArray(p)) ? JSON.stringify(p) : p)
     }
   })
-  let collector = {where: [], params: sql_params}
-  if (q.filters.length > 0) {
-    q.filters.forEach(function (f) {
-      let sqlop = sql_filter_operation[f.op]
-      if (sqlop.where) {
-        sqlop.add(sqlop, q, f, collector)
-      }
-    })
-  }
-  const sql = `UPDATE ${q.api.db_schema}.${q.api.db_table} SET ${columns.join(', ')} ${where(collector)}`
-  done(sql, sql_params)
-}
-
-function delete_(q, done) {
-  let collector = {where: [], params: []}
-  if (q.filters.length > 0) {
-    q.filters.forEach(function (f) {
-      let sqlop = sql_filter_operation[f.op]
-      if (sqlop.where) {
-        sqlop.add(sqlop, q, f, collector)
-      }
-    })
-  }
-  const sql = `DELETE FROM ${q.api.db_schema}.${q.api.db_table} ${where(collector)}`
+  process_filters(q, collector)
+  const sql = `UPDATE ${q.api.db_schema}.${q.api.db_table} SET ${columns.join(', ')}${where(collector.where)}`
   done(sql, collector.params)
 }
 
-function where(collector) {
-  return collector.where.length
-      ? `WHERE ${collector.where.join(' AND ')}`
+function delete_(q, done) {
+  let collector = {params: []}
+  process_filters(q, collector)
+  const sql = `DELETE FROM ${q.api.db_schema}.${q.api.db_table}${where(collector.where)}`
+  done(sql, collector.params)
+}
+
+function process_filters(q, collector) {
+  if (q.filters.length > 0) {
+    q.filters.forEach(function (f) {
+      let sqlop = sql_filter_operation[f.op]
+      if (!sqlop)
+        throw `There was no such sql op for : ${f.op}`
+      let coll = collector[sqlop.group]
+      if (!coll) {
+        coll = JSON.parse(sql_group_template[sqlop.group])
+        collector[sqlop.group] = coll
+      }
+        sqlop.add(sqlop, q, f, collector)
+    })
+  }
+  return collector
+}
+
+function where(stmt) {
+  return stmt && stmt.length
+      ? ` WHERE ${stmt.join(' AND ')}`
       : ''
+}
+
+function limits(stmt) {
+  const lim = parseInt(stmt && stmt.limit ? stmt.limit: config.api.default_limit)
+  const off = stmt && stmt.offset ? parseInt(stmt.offset) : 0
+  return ` LIMIT ${lim} OFFSET ${off}`
+}
+
+function order_by(stmt) {
+  return stmt && stmt.length
+      ? ' ORDER BY ' + stmt.map(o => `${o.column} ${o.order}`).join(', ')
+      : ''
+
 }
 
 function isEmpty(o) {
@@ -148,23 +155,29 @@ function isEmpty(o) {
 }
 
 const sql_filter_operation = {
-  id: {where: true, op: '=', add: field_val},
-  eq: {where: true, op: '=', add: field_val},
-  ne: {where: true, op: '!=', add: field_val},
-  gt: {where: true, op: '>', add: field_val},
-  ge: {where: true, op: '>=', add: field_val},
-  lt: {where: true, op: '<', add: field_val},
-  le: {where: true, op: '<=', add: field_val},
-  in: {where: true, op: 'IN', add: in_val},
-  like: {where: true, op: 'LIKE', add: field_val},
-  offset: {offset: true, op: 'OFFSET'},
-  limit: {limit: true, op: 'LIMIT'},
-  desc: {order: true, op: 'DESC'},
-  asc: {order: true, op: 'ASC'}
+  id: {group: 'where', op: '=', add: field_val},
+  eq: {group: 'where', op: '=', add: field_val},
+  ne: {group: 'where', op: '!=', add: field_val},
+  gt: {group: 'where', op: '>', add: field_val},
+  ge: {group: 'where', op: '>=', add: field_val},
+  lt: {group: 'where', op: '<', add: field_val},
+  le: {group: 'where', op: '<=', add: field_val},
+  in: {group: 'where', op: 'IN', add: in_val},
+  like: {group: 'where', op: 'LIKE', add: field_val},
+  offset: {group: 'limit', op: 'OFFSET', add: limit},
+  limit: {group: 'limit', op: 'LIMIT', add: limit},
+  order_desc: {group: 'order', op: 'DESC', add: order},
+  order_asc: {group: 'order', op: 'ASC', add: order}
+}
+
+const sql_group_template = {
+  where: JSON.stringify([]),
+  limit: JSON.stringify({}),
+  order: JSON.stringify([])
 }
 
 function field_val(sqlop, q, f, cl) {
-  cl.where.push(`${q.api.fields[f.field].column_name} ${sqlop.op} $${cl.params.length +1}`)
+  cl[sqlop.group].push(`${q.api.fields[f.field].column_name} ${sqlop.op} $${cl.params.length +1}`)
   cl.params.push(wrap_val(sqlop, f.val))
 }
 
@@ -174,8 +187,19 @@ function in_val(sqlop, q, f, cl) {
   }
   let i = cl.params.length
   const inlist = f.val.map(v => `$${++i}`)
-  cl.where.push(`${q.api.fields[f.field].column_name} ${sqlop.op} (${inlist.join(', ')})`)
+  cl[sqlop.group].push(`${q.api.fields[f.field].column_name} ${sqlop.op} (${inlist.join(', ')})`)
   cl.params.push.apply(cl.params, f.val.map(v => wrap_val(sqlop, v)))
+}
+
+function limit(sqlop, q, f, cl) {
+  cl[sqlop.group][f.op] = parseInt(f.val)
+}
+
+function order(sqlop, q, f, cl) {
+  let c = cl[sqlop.group]
+  f.val.forEach(v => {
+    c.push({column: q.api.fields[v].column_name, order: sqlop.op})
+  })
 }
 
 function wrap_val(sqlop, v) {

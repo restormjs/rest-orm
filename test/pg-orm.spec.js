@@ -48,7 +48,7 @@ describe('Postgresql queries', function() {
                 expect(sql).to.equal(t.pg.sql)
                 expect(params).to.deep.equal(t.pg.params)
                 return new Promise((resolve) => {
-                    resolve({rows: [t.response.body]})
+                    resolve({rows: t.response.body})
                 })
             }
 

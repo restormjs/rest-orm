@@ -58,17 +58,11 @@
           "is_required":false,
           "column_name":"last_login"
         },
-        "password":{
-          "name":"password",
+        "location":{
+          "name":"location",
           "type":"string",
           "is_required":false,
-          "column_name":"password"
-        },
-        "username":{
-          "name":"username",
-          "type":"string",
-          "is_required":false,
-          "column_name":"username"
+          "column_name":"location"
         }
       }
     },
