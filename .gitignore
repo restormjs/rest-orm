@@ -106,4 +106,3 @@ dist
 *.iml
 api-spec.json
 .idea
-.coveralls.yml
