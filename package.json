@@ -1,5 +1,5 @@
 {
-  "name": "restormjs",
+  "name": "@restormjs/restormjs",
   "version": "0.0.9",
   "description": "A thin, fast and secure REST service to database objects",
   "main": "bin/www",
