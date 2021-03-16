@@ -1,10 +1,10 @@
+[![Node.js CI](https://github.com/restormjs/restormjs/actions/workflows/node.js.yml/badge.svg)](https://github.com/restormjs/restormjs/actions/workflows/node.js.yml)
+[![CodeQL](https://github.com/restormjs/restormjs/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/restormjs/restormjs/actions/workflows/codeql-analysis.yml)
+[![Coverage Status](https://coveralls.io/repos/github/restormjs/restormjs/badge.svg?branch=main)](https://coveralls.io/github/restormjs/restormjs?branch=main)
 
 # restormjs [DRAFT][WIP][BROKEN][WAIT]
 A thin, fast, flexible and secure REST service to database objects.
 
-[![Node.js CI](https://github.com/restormjs/restormjs/actions/workflows/node.js.yml/badge.svg)](https://github.com/restormjs/restormjs/actions/workflows/node.js.yml)
-[![CodeQL](https://github.com/restormjs/restormjs/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/restormjs/restormjs/actions/workflows/codeql-analysis.yml)
-[![Coverage Status](https://coveralls.io/repos/github/restormjs/restormjs/badge.svg?branch=main)](https://coveralls.io/github/restormjs/restormjs?branch=main)
 ## Problem
 Long story short, the longer the more I realize ORM as an engineering concept is a bad antipattern. Why? It makes things messy, very quickly from the start. Unmaintainable, both db and client side. ORM does not hide persistence complexity, just delays the moment of truth. This project is about getting rid of ORM as a concept, once and hopefully forever.
 What's left? Think of it as a REST query language to a database, straight and simple.
@@ -32,8 +32,7 @@ npm install restormjs
 npm test
 
 # Generate API specification (Use your database)
-npx restorm-pg-generate --user=restormjs --host=localhost --db=restormjs --
-passwd=restormjs --port=5432 --schema=public --output=api-spec.json
+npx restorm-pg-generate --db-conn=postgres://restormjs:restormjs@localhost:5432/restormjs > api-spec.json
 
 # TBD override config
 npx restormjs-server

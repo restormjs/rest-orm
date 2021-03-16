@@ -1,13 +1,12 @@
 {
-  "name": "@restormjs/restormjs",
-  "version": "0.0.10",
+  "name": "restormjs",
+  "version": "0.0.11",
   "description": "A thin, fast and secure REST service to database objects",
   "main": "bin/www",
   "scripts": {
     "test": "nyc --reporter=lcov --reporter=text mocha --timeout 20000 --exit --require babel-register ./test",
-    "test-mocha": "mocha --reporter spec --timeout 10000",
-    "lint": "eslint ./bin ./src ./test ./src/provider",
-    "lint-fix": "eslint --fix ./bin ./src ./test ./src/provider",
+    "test-lite": "mocha --reporter spec --timeout 10000",
+    "lint": "eslint --fix ./bin ./src ./test ./src/provider",
     "start": "node bin/www"
   },
   "bin": {
@@ -20,8 +19,7 @@
     "morgan": "^1.10.0",
     "pg": "^8.5.1",
     "request": "^2.88.2",
-    "useragent": "^2.3.0",
-    "yargs": "^16.2.0"
+    "useragent": "^2.3.0"
   },
   "repository": {
     "type": "git",

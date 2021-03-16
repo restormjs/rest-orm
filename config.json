@@ -8,7 +8,7 @@
     },
     "api": {
       "paths": {
-        "/": "api-spec.json"
+        "v1": "api-spec.json"
       }
     },
     "orm": {
