@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "https://example.com/restormjs.schema.json",
+  "title": "RESTORMJS",
+  "description": "JSON Schema for RESTORMJS API specification",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "API specification name"
+    },
+    "version": {
+      "type": "string",
+      "description": "API specification version"
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp this API specification was created on"
+    },
+    "description": {
+      "type": "string",
+      "description": "API specification version"
+    },
+    "paths": {
+      "type": "object",
+      "description": "List of API paths supported by specification",
+      "patternProperties": {
+        "\\w+": {"$ref": "#/definitions/Path"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+
+  "definitions": {
+    "Field": {
+      "type": "object",
+      "description": "API Field description and database mapping",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Field name"
+        },
+        "type": {
+          "type": "string",
+          "description": "Field type",
+          "enum": ["number", "string", "boolean"]
+        },
+        "required": {
+          "type": "boolean",
+          "description": "Flag indicating whether the field is required"
+        },
+        "column": {
+          "type": "string",
+          "description": "DB column name",
+          "pattern": "\\w+",
+          "maxLength": 128
+        },
+        "grants": {
+          "type": "string",
+          "description": "Granted operations on this field",
+          "pattern": "C?R?U?",
+          "minLength": 1,
+          "maxLength": 3
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "type",
+        "required",
+        "column",
+        "grants"
+      ]
+    },
+    "Path": {
+      "type": "object",
+      "description": "API path description and database mapping",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "name for api path"
+        },
+        "path": {
+          "type": "string",
+          "description": "URL path to this API",
+          "pattern": "\\w+",
+          "maxLength": 128
+        },
+        "auth": {
+          "type": "boolean",
+          "description": "Flag indicating whether api is auth protected so authentication data is required"
+        },
+        "table": {
+          "type": "string",
+          "description": "DB table name",
+          "pattern": "\\w+",
+          "maxLength": 128
+        },
+        "schema": {
+          "type": "string",
+          "description": "DB schema name",
+          "pattern": "\\w+",
+          "maxLength": 128
+        },
+        "grants": {
+          "type": "string",
+          "description": "Granted operations on this API",
+          "pattern": "C?R?U?D?",
+          "minLength": 1,
+          "maxLength": 4
+        },
+        "fields": {
+          "type": "object",
+          "description": "List of fields available for this API",
+          "patternProperties": {
+            "\\w+": {"$ref": "#/definitions/Field"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "path",
+        "auth",
+        "table",
+        "schema",
+        "grants",
+        "fields"
+      ]
+    }
+  }
+}

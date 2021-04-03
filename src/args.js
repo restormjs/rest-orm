@@ -1,13 +1,15 @@
 
+const argv = require('./argv')
+
 const args = {
-  bin: process.argv[0],
+  bin: argv[0],
   usage: function (usage) {
     console.error(usage)
     process.exit(-1)
   }
 }
 
-process.argv.filter(a => a.startsWith('--')).forEach(a => {
+argv.filter(a => a.startsWith('--')).forEach(a => {
   const t = a.split('=')
   if (t.length > 0) {
     const n = t[0].substring(2)

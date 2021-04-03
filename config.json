@@ -8,11 +8,13 @@
     },
     "api": {
       "paths": {
-        "v1": "api-spec.json"
+        "/": "api-spec.json"
       }
     },
     "orm": {
-      "provider": "./provider/pg-orm"
+      "provider": "./provider/pg-orm",
+      "auth_query": "SELECT * from auth.authenticate($1, $2)",
+      "end_auth_query": "SELECT * from auth.end_authentication()"
     },
     "db": {
       "public": {

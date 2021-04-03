@@ -11,22 +11,22 @@ async function execute (query, done) {
         done('sqlnoop')
       } else {
         console.log(`sql: ${sql}, params: ${params}`)
-        if (query.api.protected) {
+        if (query.api.auth) {
           if (!query.auth.token || !query.auth.device) {
             done('auth required')
           } else {
-            client.protected.query('SELECT * from auth.authenticate($1, $2)', [query.auth.token, query.auth.device])
+            client.protected.query(config.orm.auth_query, [query.auth.token, query.auth.device])
               .then(result => {
                 if (result.rows[0].authenticate) {
                   console.log(`authenticated user ${result.rows[0].authenticate}`)
                   try {
                     client.protected.query(sql, params)
                       .then(res => {
-                        client.protected.query('SELECT * from auth.end_authentication()')
+                        client.protected.query(config.orm.end_auth_query)
                         done(null, unfold(res.rows, query))
                       })
                   } catch (err) {
-                    client.protected.query('SELECT * from auth.end_authentication()')
+                    client.protected.query(config.orm.end_auth_query)
                     done(`query error: ${err}`)
                   }
                 } else {
@@ -61,9 +61,9 @@ function unfold (rows, q) {
 
 function select (q, done) {
   const collector = { params: [] }
-  const columns = Object.values(q.api.fields).map(function (v) { return v.column_name !== v.name ? v.column_name + ' as ' + v.name : v.column_name })
+  const columns = Object.values(q.api.fields).map(function (v) { return v.column !== v.name ? v.column + ' as ' + v.name : v.column })
   process_filters(q, collector)
-  const sql = `SELECT ${columns.join(', ')} FROM ${q.api.db_schema}.${q.api.db_table}${where(collector.where)}${limits(collector.limit)}${order_by(collector.order)}`
+  const sql = `SELECT ${columns.join(', ')} FROM ${q.api.schema}.${q.api.table}${where(collector.where)}${limits(collector.limit)}${order_by(collector.order)}`
   done(sql, collector.params)
 }
 
@@ -75,14 +75,15 @@ function insert (q, done) {
   Object.keys(q.payload).filter(k => !(system_fields.includes(k))).forEach(k => {
     const p = q.payload[k]
     if (!isEmpty(p)) {
-      columns.push(q.api.fields[k].column_name)
+      columns.push(q.api.fields[k].column)
       values.push(`$${++i}`)
       sql_params.push((typeof p === 'object' || Array.isArray(p)) ? JSON.stringify(p) : p)
     }
   })
-  let sql = `INSERT INTO ${q.api.db_schema}.${q.api.db_table} (${columns.join(', ')}) VALUES (${values.join(', ')})`
+  let sql = `INSERT INTO ${q.api.schema}.${q.api.table} (${columns.join(', ')}) VALUES (${values.join(', ')})`
   if (q.api.fields.id) {
-    sql += ` RETURNING ${q.api.fields.id.column_name} AS id`
+    const id = q.api.fields.id
+    sql += ` RETURNING ${id.column !== id.name ? id.column + ' as ' + id.name : id.column}`
   }
   done(sql, sql_params)
 }
@@ -94,19 +95,19 @@ function update (q, done) {
   Object.keys(q.payload).filter(k => !(system_fields.includes(k))).forEach(k => {
     const p = q.payload[k]
     if (!isEmpty(p)) {
-      columns.push(`${q.api.fields[k].column_name} = $${++i}`)
+      columns.push(`${q.api.fields[k].column} = $${++i}`)
       collector.params.push((typeof p === 'object' || Array.isArray(p)) ? JSON.stringify(p) : p)
     }
   })
   process_filters(q, collector)
-  const sql = `UPDATE ${q.api.db_schema}.${q.api.db_table} SET ${columns.join(', ')}${where(collector.where)}`
+  const sql = `UPDATE ${q.api.schema}.${q.api.table} SET ${columns.join(', ')}${where(collector.where)}`
   done(sql, collector.params)
 }
 
 function delete_ (q, done) {
   const collector = { params: [] }
   process_filters(q, collector)
-  const sql = `DELETE FROM ${q.api.db_schema}.${q.api.db_table}${where(collector.where)}`
+  const sql = `DELETE FROM ${q.api.schema}.${q.api.table}${where(collector.where)}`
   done(sql, collector.params)
 }
 
@@ -173,7 +174,7 @@ const sql_group_template = {
 }
 
 function field_val (sqlop, q, f, cl) {
-  cl[sqlop.group].push(`${q.api.fields[f.field].column_name} ${sqlop.op} $${cl.params.length + 1}`)
+  cl[sqlop.group].push(`${q.api.fields[f.field].column} ${sqlop.op} $${cl.params.length + 1}`)
   cl.params.push(wrap_val(sqlop, f.val))
 }
 
@@ -183,7 +184,7 @@ function in_val (sqlop, q, f, cl) {
   }
   let i = cl.params.length
   const inlist = f.val.map(() => `$${++i}`)
-  cl[sqlop.group].push(`${q.api.fields[f.field].column_name} ${sqlop.op} (${inlist.join(', ')})`)
+  cl[sqlop.group].push(`${q.api.fields[f.field].column} ${sqlop.op} (${inlist.join(', ')})`)
   cl.params.push.apply(cl.params, f.val.map(v => wrap_val(sqlop, v)))
 }
 
@@ -194,7 +195,7 @@ function limit (sqlop, q, f, cl) {
 function order (sqlop, q, f, cl) {
   const c = cl[sqlop.group]
   f.val.forEach(v => {
-    c.push({ column: q.api.fields[v].column_name, order: sqlop.op })
+    c.push({ column: q.api.fields[v].column, order: sqlop.op })
   })
 }
 

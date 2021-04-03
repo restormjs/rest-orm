@@ -12,7 +12,8 @@ const default_config = {
       R: 'id:0-1,eq:0+,ne:0+,gt:0+,ge:0+,lt:0+,le:0+,like:0+,in:0+,offset:0-1,limit:0-1,order_desc:0-1,order_asc:0-1',
       U: 'id:1',
       D: 'id:1'
-    }
+    },
+    auth_header: 'x-rs-authtoken'
   },
   orm: {
     provider: './provider/inmem-orm'

@@ -7,7 +7,7 @@ const fs = require('fs')
 const usage = `
 Generates restormjs api spec from postgres database objects
 Usage:
-      npx restorm-pg-generate [args]
+      npx restorm-pg-spec [args]
 Arguments:
   --db-user=     - pg login user
   --db-passwd=   - pg login password
@@ -25,51 +25,55 @@ Arguments:
   --auth-role=   - Role that identifies protected database objects. If a table granted to auth role, an autnentication will be required to access it
   --help         - Prints usage
 Example:
-  npx restorm-pg-generate --db-conn=postgres://restormjs:restormjs@localhost:5432/restormjs > api-spec.json
+  npx restorm-pg-spec --db-conn=postgres://restormjs:restormjs@localhost:5432/restormjs > api-spec.json
 `
 
 if (argv.help) { argv.usage(usage) }
-
-const client = argv['db-conn']
-  ? new Client({
-    connectionString: argv['db-conn']
-  })
-  : new Client({
-    user: argv['db-user'],
-    host: argv['db-host'],
-    database: argv['db-name'],
-    password: argv['db-passwd'],
-    port: argv['db-port'] ? argv['db-port'] : 5432
-  })
-
-client.connect(err => {
-  if (err) {
-    console.log(`Could not connect to posgres database: ${err.message}.
-    Use npx restorm-pg-generate --help for arguments list`)
-    process.exit(-1)
-  }
-})
 
 const schema = argv['db-schema'] ? argv['db-schema'] : 'public'
 const conf = {
   schema: schema,
   output: argv.output,
-  tables: argv['db-tables'] ? argv['db-tables'].split(',').trim() : undefined,
-  name: argv['api-name'] ? argv['api-name'] : 'RESTORMJS is the best API server',
-  desc: argv['api-desc'] ? argv['api-desc'] : `Auto generated RESTORMJS api from ${schema} schema using restorm-pg-generate`,
+  tables: argv['db-tables'] ? argv['db-tables'].split(',') : undefined,
+  name: argv['api-name'] ? argv['api-name'] : `${argv['db-name'] ? argv['db-name'] : 'restormjs'}-${schema} APIs`,
+  desc: argv['api-desc'] ? argv['api-desc'] : `Auto generated RESTORMJS api from ${schema} schema using restorm-pg-spec`,
   version: argv['api-version'] ? argv['api-version'] : '0.0.1',
-  pub_role: argv['pub-role'] ? argv['pub-role'] : client.user,
-  auth_rile: argv['auth-role']
+  auth_role: argv['auth-role']
 }
 
-const and_tables_in = conf.tables
-  ? `AND table_name IN (${conf.tables.map(t => `'${t}'`).join(',')})`
-  : ''
+if (argv['db-conn']) { conf.db_conn = argv['db-conn'] }
+if (argv['db-user']) { conf.db_user = argv['db-user'] }
+if (argv['db-host']) { conf.db_host = argv['db-host'] }
+if (argv['db-name']) { conf.db_name = argv['db-name'] }
+if (argv['db-passwd']) { conf.db_passwd = argv['db-passwd'] }
+if (argv['db-port']) { conf.db_port = argv['db-port'] } else if (!conf.db_conn && conf.db_host) { conf.db_port = 5432 }
+
+const client = conf.db_conn
+  ? new Client({
+    connectionString: conf.db_conn
+  })
+  : new Client({
+    user: conf.db_user,
+    host: conf.db_host,
+    database: conf.db_name,
+    password: conf.db_passwd,
+    port: conf.db_port
+  })
+
+conf.pub_role = argv['pub-role'] ? argv['pub-role'] : client.user
 
 console.error(
 `---------------------------------------
 Config: ${JSON.stringify(conf)}
 ---------------------------------------`)
+
+client.connect(err => {
+  if (err) {
+    console.log(`Could not connect to posgres database: ${err.message}.
+    Use npx restorm-pg-spec --help for arguments list`)
+    process.exit(-1)
+  }
+})
 
 const metadata_sql = `
     with table_with_pk as (
@@ -81,7 +85,7 @@ const metadata_sql = `
         and tc.table_schema = cu.table_schema
       where tc.constraint_type = 'PRIMARY KEY'
         and cu.table_schema = $1
-        ${and_tables_in}
+        ${and_tables_in('cu')}
       group by cu.table_name, cu.constraint_name
       having count(cu.constraint_name) = 1
     )
@@ -94,24 +98,24 @@ const metadata_sql = `
      and cu.table_name = c.table_name
      and cu.column_name = c.column_name
      and cu.constraint_name = tpk.constraint_name
-     ${and_tables_in}
     where c.table_schema = $1
+      ${and_tables_in('c')}
     order by c.table_name, is_pk desc, c.column_name`
 
 const table_grants_sql = `
     select grantee, table_name, privilege_type
-    from information_schema.role_table_grants
+    from information_schema.role_table_grants tg
     where table_schema = $1
     and privilege_type in ('INSERT', 'SELECT', 'UPDATE', 'DELETE')
-    ${and_tables_in}
+    ${and_tables_in('tg')}
     order by grantee, table_name, privilege_type`
 
 const column_grants_sql = `
     select grantee, table_name, column_name, privilege_type
-    from information_schema.column_privileges
+    from information_schema.column_privileges cp
     where table_schema = $1
     and privilege_type in ('INSERT', 'SELECT', 'UPDATE')
-    ${and_tables_in}
+    ${and_tables_in('cp')}
     order by grantee, table_name, column_name, privilege_type`
 
 client.query(metadata_sql, [conf.schema], (err, metadata) => {
@@ -165,6 +169,7 @@ client.query(metadata_sql, [conf.schema], (err, metadata) => {
               description: conf.desc,
               paths: paths
             }
+            console.error('generated ' + Object.keys(paths).length + ' APIs')
             if (conf.output) {
               fs.writeFile(argv.output, JSON.stringify(spec), (err) => {
                 // throws an error, you could also catch it here
@@ -189,8 +194,12 @@ function toName (n) {
   return n.charAt(0).toUpperCase() + n.slice(1)
 }
 
+function pluralizeMaybe (n) {
+  return n.endsWith('s') || n.includes('_') ? n : `${n}s`
+}
+
 function toPath (n) {
-  return n.toLowerCase()
+  return pluralizeMaybe(n.toLowerCase())
 }
 
 function isProtected (tn, auth, role) {
@@ -214,13 +223,12 @@ function getApiGrants (tn, auth, role) {
         return undefined
       })
       .sort((a, b) => {
+        const sort_weights = {
+          C: 0, R: 1, U: 2, D: 3
+        }
         return sort_weights[a] - sort_weights[b]
       }).join('')
   }
-}
-
-const sort_weights = {
-  C: 0, R: 1, U: 2, D: 3
 }
 
 function toFieldType (t) {
@@ -237,7 +245,8 @@ function toFieldType (t) {
     case 'timestamp without time zone': return 'string'
     case 'date': return 'string'
     case 'jsonb': return 'string'
-    default: throw new Error("Please add mapping to field type for '" + t + "'")
+    case 'point': return 'string'
+    default: throw new Error(`Please add mapping to field type for ${t}`)
   }
 }
 
@@ -256,4 +265,10 @@ function getFieldGrants (table, column, all_grants, role) {
       default: return ''
     }
   }).join('')
+}
+
+function and_tables_in (tp) {
+  return conf.tables
+    ? `AND ${tp}.table_name IN (${conf.tables.map(t => `'${t}'`).join(',')})`
+    : ''
 }

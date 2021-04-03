@@ -70,8 +70,8 @@ function process (req, res) {
       return error_response(res, 404, 'Not Found')
     }
     // Check Auth token right away
-    if (api.protected) {
-      const auth_token = req.headers['x-hr-authtoken'] || req.query.auth_token
+    if (api.auth) {
+      const auth_token = req.headers[config.api.auth_header] || req.query.auth_token
       query.auth = {
         token: auth_token,
         device: get_device(req.headers['user-agent'])
@@ -98,7 +98,7 @@ function process (req, res) {
     // this was the last level so query against this api
     if (paths.length === i) {
       query.api = api
-      if (!api.operations.includes(query.operation)) {
+      if (!api.grants.includes(query.operation)) {
         return error_response(res, 404, 'Not Found')
       }
     }
@@ -152,7 +152,7 @@ function before_create (req, q) {
   const data = q.payload
   const fields = q.api.fields
   const field = Object.keys(fields)
-    .filter(f => fields[f].is_required && !(['id'].includes(f)))
+    .filter(f => fields[f].required && !(['id'].includes(f)))
     .find(f => !data[fields[f].name])
   if (field) {
     return `${field} is a required field`
