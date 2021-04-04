@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-expressions */
-process.env.NODE_ENV = 'test'
 
 const chai = require('chai')
 chai.use(require('chai-http'))
@@ -22,11 +21,12 @@ describe('HTTP queries', function () {
     mockdate.set(mock_date)
     server = proxyquire('../bin/www.js', {
       '../config.json': {
-        test: {
+        development: {
           server: {
             cors: {
               origin: 'http://localhost:3002'
-            }
+            },
+            max_query_params: 5
           },
           api: {
             paths: {
@@ -74,6 +74,61 @@ describe('HTTP queries', function () {
         expect(orm_executed).to.be.equal(t.orm !== undefined, 'execute should not be called')
         done()
       })
+    })
+  })
+
+  it('Test error handler', function (done) {
+    orm.execute = function (query, done) {
+      throw new Error('something bad happened')
+    }
+    request({
+      method: 'GET',
+      uri: URL_BASE + '/api/customers/1',
+      headers: {
+        'x-rs-authtoken': '12345'
+      },
+      json: true
+    },
+    function (error, response, body) {
+      expect(error).to.be.null
+      expect(response.statusCode).to.be.equal(500)
+      expect(body.message).to.be.equal('something bad happened')
+      expect(body.status).to.be.equal(500)
+      done()
+    })
+  })
+
+  it('Test orm execution error', function (done) {
+    orm.execute = function (query, done) {
+      done('handled but still bad')
+    }
+    request({
+      method: 'GET',
+      uri: URL_BASE + '/api/customers/1',
+      headers: {
+        'x-rs-authtoken': '12345'
+      },
+      json: true
+    },
+    function (error, response, body) {
+      expect(error).to.be.null
+      expect(response.statusCode).to.be.equal(400)
+      expect(body.message).to.be.equal('handled but still bad')
+      done()
+    })
+  })
+
+  it('Test hitting protected api without authentication header', function (done) {
+    request({
+      method: 'GET',
+      uri: URL_BASE + '/api/customers/1',
+      json: true
+    },
+    function (error, response, body) {
+      expect(error).to.be.null
+      expect(response.statusCode).to.be.equal(401)
+      expect(body).to.deep.equal({ message: 'not authenticated', status: 401, timestamp: '2021-04-01T20:01:02.123Z' })
+      done()
     })
   })
 

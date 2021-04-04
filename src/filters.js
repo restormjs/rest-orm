@@ -102,31 +102,33 @@ function parse (req, query) {
     if (Object.prototype.hasOwnProperty.call(req.query, param)) {
       let field
       const fdesc = query.api.fields[param]
-      let val = req.query[param]
-      let op
-      if (fdesc) {
-        field = fdesc.name
-        // identify filter from expression
-        const i = val.indexOf('=')
-        // composite filter syntax, split actual operation and value
-        if (i > -1) {
-          op = val.substr(0, i)
-          val = val.substr(i + 1)
+      const arr = Array.isArray(req.query[param]) ? req.query[param] : [req.query[param]]
+      arr.forEach(val => {
+        let op
+        if (fdesc) {
+          field = fdesc.name
+          // identify filter from expression
+          const i = val.indexOf('=')
+          // composite filter syntax, split actual operation and value
+          if (i > -1) {
+            op = val.substr(0, i)
+            val = val.substr(i + 1)
+          } else {
+            // Simple field 'eq' value filter
+            op = 'eq'
+          }
         } else {
-          // Simple field 'eq' value filter
-          op = 'eq'
+          // Filter op is a param
+          op = param
         }
-      } else {
-        // Filter op is a param
-        op = param
-      }
-      // at this point op has to be defined
-      if (!op) {
-        throw new Error(`could not identify operation from param: ${param}`)
-      }
-      // assemble and validate filter
-      const err = add_filter(query, op, val, field)
-      if (err) { throw new Error(err) }
+        // at this point op has to be defined
+        if (!op) {
+          throw new Error(`could not identify operation from param: ${param}`)
+        }
+        // assemble and validate filter
+        const err = add_filter(query, op, val, field)
+        if (err) { throw new Error(err) }
+      })
     }
   })
 }

@@ -5,7 +5,7 @@ const args = {
   bin: argv[0],
   usage: function (usage) {
     console.error(usage)
-    process.exit(-1)
+    process.exit(1)
   }
 }
 

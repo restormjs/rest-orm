@@ -1,1 +1,125 @@
-{"name":"restormjs-public APIs","version":"0.0.1","created":"2021-04-03T19:43:18.683Z","description":"Auto generated RESTORMJS api from public schema using restorm-pg-spec","paths":{"customers":{"name":"Customer","path":"customers","auth":true,"table":"customer","schema":"public","grants":"CRUD","fields":{"id":{"name":"id","type":"number","required":true,"column":"id","grants":"CR"},"postalcode":{"name":"postalcode","type":"string","required":false,"column":"postalcode","grants":"CRU"}}},"products":{"name":"Product","path":"products","auth":true,"table":"product","schema":"public","grants":"CRUD","fields":{"id":{"name":"id","type":"number","required":true,"column":"id","grants":"CR"},"price":{"name":"price","type":"string","required":true,"column":"price","grants":"CRU"},"product_name":{"name":"product_name","type":"string","required":true,"column":"product_name","grants":"CRU"},"qty":{"name":"qty","type":"string","required":true,"column":"qty","grants":"CRU"}}},"product_transaction":{"name":"Product_transaction","path":"product_transaction","auth":true,"table":"product_transaction","schema":"public","grants":"CRUD","fields":{"prod_id":{"name":"prod_id","type":"number","required":true,"column":"prod_id","grants":"CR"},"trans_id":{"name":"trans_id","type":"number","required":true,"column":"trans_id","grants":"CR"}}},"transactions":{"name":"Transactions","path":"transactions","auth":true,"table":"transactions","schema":"public","grants":"CR","fields":{"id":{"name":"id","type":"number","required":true,"column":"id","grants":"CR"},"cust_id":{"name":"cust_id","type":"number","required":false,"column":"cust_id","grants":"CRU"},"timedate":{"name":"timedate","type":"string","required":false,"column":"timedate","grants":"CRU"}}}}}
+{
+  "name": "restormjs-public APIs",
+  "version": "0.0.1",
+  "created": "2021-04-03T19:43:18.683Z",
+  "description": "Auto generated RESTORMJS api from public schema using restorm-pg-spec",
+  "paths": {
+    "customers": {
+      "name": "Customer",
+      "path": "customers",
+      "auth": true,
+      "table": "customer",
+      "schema": "public",
+      "grants": "CRUD",
+      "fields": {
+        "id": {
+          "name": "id",
+          "type": "number",
+          "required": true,
+          "column": "id",
+          "grants": "CR"
+        },
+        "postalcode": {
+          "name": "postalcode",
+          "type": "string",
+          "required": false,
+          "column": "postalcode",
+          "grants": "CRU"
+        }
+      }
+    },
+    "products": {
+      "name": "Product",
+      "path": "products",
+      "auth": true,
+      "table": "product",
+      "schema": "public",
+      "grants": "CRUD",
+      "fields": {
+        "id": {
+          "name": "id",
+          "type": "number",
+          "required": true,
+          "column": "id",
+          "grants": "CR"
+        },
+        "price": {
+          "name": "price",
+          "type": "string",
+          "required": true,
+          "column": "price",
+          "grants": "CRU"
+        },
+        "product_name": {
+          "name": "product_name",
+          "type": "string",
+          "required": true,
+          "column": "product_name",
+          "grants": "CRU"
+        },
+        "qty": {
+          "name": "qty",
+          "type": "string",
+          "required": true,
+          "column": "qty",
+          "grants": "CRU"
+        }
+      }
+    },
+    "product_transaction": {
+      "name": "Product_transaction",
+      "path": "product_transaction",
+      "auth": true,
+      "table": "product_transaction",
+      "schema": "public",
+      "grants": "CRUD",
+      "fields": {
+        "prod_id": {
+          "name": "prod_id",
+          "type": "number",
+          "required": true,
+          "column": "prod_id",
+          "grants": "CR"
+        },
+        "trans_id": {
+          "name": "trans_id",
+          "type": "number",
+          "required": true,
+          "column": "trans_id",
+          "grants": "CR"
+        }
+      }
+    },
+    "transactions": {
+      "name": "Transactions",
+      "path": "transactions",
+      "auth": true,
+      "table": "transactions",
+      "schema": "public",
+      "grants": "CR",
+      "fields": {
+        "id": {
+          "name": "id",
+          "type": "number",
+          "required": true,
+          "column": "id",
+          "grants": "CR"
+        },
+        "cust_id": {
+          "name": "cust_id",
+          "type": "number",
+          "required": false,
+          "column": "cust_id",
+          "grants": "CRU"
+        },
+        "timedate": {
+          "name": "timedate",
+          "type": "string",
+          "required": false,
+          "column": "timedate",
+          "grants": "CRU"
+        }
+      }
+    }
+  }
+}

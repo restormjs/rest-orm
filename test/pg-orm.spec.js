@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-expressions */
-process.env.NODE_ENV = 'test'
 
 const chai = require('chai')
 chai.use(require('chai-http'))
@@ -22,7 +21,7 @@ describe('Postgresql queries', function () {
     mockdate.set(mock_date)
     server = proxyquire('../bin/www.js', {
       '../config.json': {
-        test: {
+        development: {
           server: {
             cors: {
               origin: 'http://localhost:3002'

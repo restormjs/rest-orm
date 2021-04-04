@@ -1,32 +1,42 @@
-const default_config = {
-  server: {
-    max_params: 10
-  },
-  api: {
-    path_prefix: '/api',
-    max_filters: 10,
-    default_limit: 20,
-    max_limit: 100,
-    filters: {
-      C: '',
-      R: 'id:0-1,eq:0+,ne:0+,gt:0+,ge:0+,lt:0+,le:0+,like:0+,in:0+,offset:0-1,limit:0-1,order_desc:0-1,order_asc:0-1',
-      U: 'id:1',
-      D: 'id:1'
-    },
-    auth_header: 'x-rs-authtoken'
-  },
-  orm: {
-    provider: './provider/inmem-orm'
+const args = require('../src/args')
+
+let effective_config
+
+if (args.config) {
+  const fs = require('fs')
+  effective_config = JSON.parse(fs.readFileSync(args.config))
+  if (effective_config) {
+    console.error(`Could not load config from ${args.config}`)
+    process.exit(-1)
   }
+} else {
+  const default_config = {
+    server: {
+      max_query_params: 10
+    },
+    api: {
+      path_prefix: '/api',
+      max_filters: 10,
+      default_limit: 20,
+      max_limit: 100,
+      filters: {
+        C: '',
+        R: 'id:0-1,eq:0+,ne:0+,gt:0+,ge:0+,lt:0+,le:0+,like:0+,in:0+,offset:0-1,limit:0-1,order_desc:0-1,order_asc:0-1',
+        U: 'id:1',
+        D: 'id:1'
+      },
+      auth_header: 'x-rs-authtoken'
+    },
+    orm: {
+      provider: './provider/inmem-orm'
+    }
+  }
+
+  const config = require('../config.json')
+  const environment = process.env.NODE_ENV || 'development'
+  if (!config[environment]) throw new Error('no config for env: ' + environment)
+  effective_config = deepMerge(default_config, config[environment])
 }
-
-const config = require('../config.json')
-const environment = process.env.NODE_ENV || 'development'
-if (!config[environment]) throw new Error('no config for env: ' + environment)
-const effective_config = deepMerge(default_config, config[environment])
-module.exports = effective_config
-
-// TBD: Add args parsing here
 
 // Credits: curveball from stackoverflow.com (https://stackoverflow.com/users/7355533/curveball)
 function deepMerge (target, source) {
@@ -53,3 +63,9 @@ function deepMerge (target, source) {
   }
   return target
 }
+
+if (args['root-spec']) {
+  effective_config.api.paths['/'] = args['root-spec']
+}
+
+module.exports = effective_config

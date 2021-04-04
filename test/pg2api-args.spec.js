@@ -73,7 +73,6 @@ describe('pg2api - command line arguments', function () {
         return pgClientStub
       })
       pgClientStub.query = function (sql, params, done) {
-        // expect(params).to.deep.equal([scenario.config.schema])
       }
       scenario.in['@global'] = true
       proxyquire('../bin/pg2api', {
@@ -92,6 +91,32 @@ describe('pg2api - command line arguments', function () {
       expect(pgClientStub.port).to.be.equal(scenario.out.db_port)
       done()
     })
+  })
+
+  it('Arguments: --help', function (done) {
+    sinon.stub(process, 'exit')
+
+    const pgClientStub = {
+      connect: sinon.stub().returnsThis(),
+      query: function (sql, params, done) {}
+    }
+    const Client = sinon.stub().callsFake((args) => {
+      Object.assign(pgClientStub, args)
+      return pgClientStub
+    })
+
+    const argv = ['command', '--help']
+    argv['@global'] = true
+    proxyquire('../bin/pg2api', {
+      pg: {
+        Client: Client
+      },
+      '../src/argv': argv
+    })
+
+    /* eslint-disable no-unused-expressions */
+    expect(process.exit.calledWith(1)).to.be.true
+    done()
   })
 
   afterEach(() => {

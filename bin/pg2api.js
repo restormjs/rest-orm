@@ -27,7 +27,6 @@ Arguments:
 Example:
   npx restorm-pg-spec --db-conn=postgres://restormjs:restormjs@localhost:5432/restormjs > api-spec.json
 `
-
 if (argv.help) { argv.usage(usage) }
 
 const schema = argv['db-schema'] ? argv['db-schema'] : 'public'

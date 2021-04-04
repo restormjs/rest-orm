@@ -124,16 +124,16 @@ describe('pg2api - spec generator tests', function () {
         {
           res: {
             rows: [{ table_name: 'account_roles', column_name: 'grant_date', is_nullable: 'YES', data_type: 'timestamp without time zone', character_octet_length: null, is_pk: '0', has_default: '0' },
-              { table_name: 'account_roles', column_name: 'role_id', is_nullable: 'NO', data_type: 'integer', character_octet_length: null, is_pk: '0', has_default: '0' },
-              { table_name: 'account_roles', column_name: 'user_id', is_nullable: 'NO', data_type: 'integer', character_octet_length: null, is_pk: '0', has_default: '0' },
-              { table_name: 'accounts', column_name: 'user_id', is_nullable: 'NO', data_type: 'integer', character_octet_length: null, is_pk: '1', has_default: '1' },
+              { table_name: 'account_roles', column_name: 'role_id', is_nullable: 'NO', data_type: 'numeric', character_octet_length: null, is_pk: '0', has_default: '0' },
+              { table_name: 'account_roles', column_name: 'user_id', is_nullable: 'NO', data_type: 'bigint', character_octet_length: null, is_pk: '0', has_default: '0' },
+              { table_name: 'accounts', column_name: 'user_id', is_nullable: 'NO', data_type: 'real', character_octet_length: null, is_pk: '1', has_default: '1' },
               { table_name: 'accounts', column_name: 'created_on', is_nullable: 'NO', data_type: 'timestamp without time zone', character_octet_length: null, is_pk: '0', has_default: '0' },
               { table_name: 'accounts', column_name: 'email', is_nullable: 'NO', data_type: 'character varying', character_octet_length: 1020, is_pk: '0', has_default: '0' },
               { table_name: 'accounts', column_name: 'last_login', is_nullable: 'YES', data_type: 'timestamp without time zone', character_octet_length: null, is_pk: '0', has_default: '0' },
-              { table_name: 'accounts', column_name: 'password', is_nullable: 'NO', data_type: 'character varying', character_octet_length: 200, is_pk: '0', has_default: '0' },
+              { table_name: 'accounts', column_name: 'password', is_nullable: 'NO', data_type: 'text', character_octet_length: 200, is_pk: '0', has_default: '0' },
               { table_name: 'accounts', column_name: 'username', is_nullable: 'NO', data_type: 'character varying', character_octet_length: 200, is_pk: '0', has_default: '0' },
               { table_name: 'roles', column_name: 'role_id', is_nullable: 'NO', data_type: 'integer', character_octet_length: null, is_pk: '1', has_default: '1' },
-              { table_name: 'roles', column_name: 'role_name', is_nullable: 'NO', data_type: 'character varying', character_octet_length: 1020, is_pk: '0', has_default: '0' }]
+              { table_name: 'roles', column_name: 'role_name', is_nullable: 'NO', data_type: 'point', character_octet_length: 1020, is_pk: '0', has_default: '0' }]
           }
         },
         {

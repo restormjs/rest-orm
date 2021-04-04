@@ -3,8 +3,7 @@
     "server":{
       "cors": {
         "origin": "http://localhost:3002"
-      },
-      "max_params": 10
+      }
     },
     "api": {
       "paths": {

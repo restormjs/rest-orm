@@ -45,8 +45,12 @@ const validators = { C: before_create, R: before_read, U: before_update, D: befo
 
 function process (req, res) {
   res.setHeader('Content-Type', 'application/json')
-  if (req.query.length > config.server.max_params) {
-    error_response(res, 400, 'Query exceeded max allowed parameters number')
+  let query_size = 0
+  Object.values(req.query).forEach(v => {
+    query_size += Array.isArray(v) ? v.length : 1
+  })
+  if (query_size > config.server.max_query_params) {
+    return error_response(res, 400, 'Query exceeded max allowed parameters number')
   }
   const query = {
     filters: []

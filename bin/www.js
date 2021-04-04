@@ -1,5 +1,21 @@
 #!/usr/bin/env node
 
+const argv = require('../src/args')
+
+const usage = `
+RESTORMJS server
+Usage:
+      npx restormjs-server [args]
+Arguments:
+  --config=      - Configuration file. When specified, default configs would be ignored.
+  --root-spec=   - Override file location for root path api specification (by default it is specified in config)
+  --help         - Prints usage
+Example:
+  npx restormjs-server --config=config.json --root-spec=api-spec.json
+`
+
+if (argv.help) { argv.usage(usage) }
+
 /**
  * Module dependencies.
  */

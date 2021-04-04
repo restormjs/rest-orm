@@ -1,1 +1,53 @@
-{"name":"Sample api spec describing playground table","version":"0.0.1","created":"2021-03-16T02:33:26.778Z","description":"Auto generated RESTORMJS api from public schema using restorm-pg-spec","paths":{"playgrounds":{"name":"Playground","path":"playgrounds","auth":false,"table":"playground","schema":"public","grants":"CRUD","fields":{"id":{"name":"id","type":"number","required":false,"column":"equip_id","grants":"CRU"},"color":{"name":"color","type":"string","required":true,"column":"color","grants":"CRU"},"install_date":{"name":"install_date","type":"string","required":false,"column":"install_date","grants":"CRU"},"location":{"name":"location","type":"string","required":false,"column":"location","grants":"CRU"},"type":{"name":"type","type":"string","required":true,"column":"type","grants":"CRU"}}}}}
+{
+  "name": "Sample api spec describing playground table",
+  "version": "0.0.1",
+  "created": "2021-03-16T02:33:26.778Z",
+  "description": "Auto generated RESTORMJS api from public schema using restorm-pg-spec",
+  "paths": {
+    "playgrounds": {
+      "name": "Playground",
+      "path": "playgrounds",
+      "auth": false,
+      "table": "playground",
+      "schema": "public",
+      "grants": "CRUD",
+      "fields": {
+        "id": {
+          "name": "id",
+          "type": "number",
+          "required": false,
+          "column": "equip_id",
+          "grants": "CRU"
+        },
+        "color": {
+          "name": "color",
+          "type": "string",
+          "required": true,
+          "column": "color",
+          "grants": "CRU"
+        },
+        "install_date": {
+          "name": "install_date",
+          "type": "string",
+          "required": false,
+          "column": "install_date",
+          "grants": "CRU"
+        },
+        "location": {
+          "name": "location",
+          "type": "string",
+          "required": false,
+          "column": "location",
+          "grants": "CRU"
+        },
+        "type": {
+          "name": "type",
+          "type": "string",
+          "required": true,
+          "column": "type",
+          "grants": "CRU"
+        }
+      }
+    }
+  }
+}

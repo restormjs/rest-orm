@@ -34,10 +34,15 @@ npm test
 # Generate API specification (Use your database)
 npx restorm-pg-generate --db-conn=postgres://restormjs:restormjs@localhost:5432/restormjs > api-spec.json
 
-# TBD override config
-npx restormjs-server
+# Configure your server
+npx restormjs-get-config > config.json
 
-# Verify that the server is up and running
+# Edit config.json to set up database connection and optional settings
+
+# TBD override config
+npx restormjs-server --config=config.json
+
+# Verify that the server is up and running. This should return api spec json:
 curl http://localhost:3002/api
 ```
 

@@ -1,7 +1,21 @@
-
+const fs = require('fs')
 const mock_date = '2021-04-01T20:01:02.123Z'
 
 const tests = [{
+  args: { m: 'GET', url: '/api/' },
+  response: { status: 200, body: { '/': JSON.parse(fs.readFileSync('spec/product-api-spec.json')) } }
+}, {
+  args: { m: 'GET', url: '/api/products?price=1&product_name=product1&qty=gt=1&qty=lt=10&limit=10&offset=10' },
+  response: { status: 400, body: { message: 'Query exceeded max allowed parameters number', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
+}, {
+  args: { m: 'DELETE', url: '/api/transactions/1' },
+  response: { status: 404, body: { message: 'Not Found', status: 404, timestamp: '2021-04-01T20:01:02.123Z' } }
+}, {
+  args: { m: 'GET', url: '/api/products?qty=gt=1&qty=lt=10' },
+  orm: { api: 'products', op: 'R', filters: [{ field: 'qty', op: 'gt', val: '1' }, { field: 'qty', op: 'lt', val: '10' }] },
+  pg: { sql: 'SELECT id, price, product_name, qty FROM public.product WHERE qty > $1 AND qty < $2 LIMIT 20 OFFSET 0', params: ['1', '10'] },
+  response: { status: 200, body: { id: 1 } }
+}, {
   args: { m: 'GET', url: '/api/products/1' },
   orm: { api: 'products', op: 'R', filters: [{ field: 'id', op: 'id', val: '1' }] },
   pg: { sql: 'SELECT id, price, product_name, qty FROM public.product WHERE id = $1 LIMIT 20 OFFSET 0', params: ['1'] },
@@ -12,15 +26,30 @@ const tests = [{
   pg: { sql: 'INSERT INTO public.product (product_name, price, qty) VALUES ($1, $2, $3) RETURNING id', params: ['product1', 123.45, 1] },
   response: { status: 200, body: { id: 3 } }
 }, {
+  args: { m: 'POST', url: '/api/products' },
+  response: { status: 400, body: { message: 'json payload is required', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
+}, {
+  args: { m: 'POST', url: '/api/products', payload: { id: 1, product_name: 'product1' } },
+  response: { status: 400, body: { message: 'price is a required field', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
+}, {
   args: { m: 'PATCH', url: '/api/products/1', payload: { id: '1', product_name: 'product1' } },
   orm: { api: 'products', op: 'U', filters: [{ field: 'id', op: 'id', val: '1' }], payload: { id: '1', product_name: 'product1' } },
   pg: { sql: 'UPDATE public.product SET product_name = $1 WHERE id = $2', params: ['product1', '1'] },
   response: { status: 204 }
 }, {
+  args: { m: 'PATCH', url: '/api/products', payload: { id: '1', product_name: 'product1' } },
+  response: { status: 400, body: { message: 'id is a required parameter', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
+}, {
+  args: { m: 'PATCH', url: '/api/products/1' },
+  response: { status: 400, body: { message: 'no data to update', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
+}, {
   args: { m: 'DELETE', url: '/api/products/1' },
   orm: { api: 'products', op: 'D', filters: [{ field: 'id', op: 'id', val: '1' }] },
   pg: { sql: 'DELETE FROM public.product WHERE id = $1', params: ['1'] },
   response: { status: 204 }
+}, {
+  args: { m: 'DELETE', url: '/api/products/1', payload: { product_name: 'product1' } },
+  response: { status: 400, body: { message: 'no payload expected', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
 }, {
   args: { m: 'GET', url: '/api/something/' },
   response: { status: 404, body: { message: 'Not Found', status: 404, timestamp: mock_date } }
