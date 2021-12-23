@@ -13,7 +13,21 @@ const request = require('request')
 const proxyquire = require('proxyquire')
 
 let server
-const client = { public: {}, protected: {}, '@global': true }
+let public_client
+let auth_client
+const pool = {
+  public: function (ready) {
+    ready(public_client, function () {
+      public_client = null
+    })
+  },
+  auth: function (ready) {
+    ready(auth_client, function () {
+      auth_client = null
+    })
+  },
+  '@global': true
+}
 const URL_BASE = 'http://localhost:3002'
 
 describe('Postgresql queries', function () {
@@ -41,14 +55,16 @@ describe('Postgresql queries', function () {
         },
         '@global': true
       },
-      '../src/provider/pg-client': client
+      '../src/provider/pg-pool': pool
     })
   })
 
   scenarios.tests.filter(t => t.orm).forEach(t => {
     it(`Test ${t.args.m} ${t.args.url} responds ${t.response.status}`, function (done) {
       let querySequence = 0
-      client.protected.query = function (sql, params) {
+      public_client = {}
+      auth_client = {}
+      auth_client.query = function (sql, params) {
         ++querySequence
         if (querySequence === 1) {
           expect(sql).to.equal('authenticate')

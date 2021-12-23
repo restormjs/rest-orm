@@ -1,4 +1,4 @@
-const client = require('./pg-client')
+const pool = require('./pg-pool')
 const config = require('../config')
 
 const sqlprep = { C: insert, R: select, U: update, D: delete_ }
@@ -15,32 +15,46 @@ async function execute (query, done) {
           if (!query.auth.token || !query.auth.device) {
             done('auth required')
           } else {
-            client.protected.query(config.orm.auth_query, [query.auth.token, query.auth.device])
-              .then(result => {
-                if (result.rows[0].authenticate) {
-                  console.log(`authenticated user ${result.rows[0].authenticate}`)
-                  try {
-                    client.protected.query(sql, params)
-                      .then(res => {
-                        client.protected.query(config.orm.end_auth_query)
-                        done(null, unfold(res.rows, query))
-                      })
-                  } catch (err) {
-                    client.protected.query(config.orm.end_auth_query)
-                    done(`query error: ${err}`)
+            pool.auth((client, release) => {
+              client.query(config.orm.auth_query, [query.auth.token, query.auth.device])
+                .then(result => {
+                  if (result.rows[0].authenticate) {
+                    console.log(`authenticated user ${result.rows[0].authenticate}`)
+                    try {
+                      client.query(sql, params)
+                        .then(res => {
+                          client.query(config.orm.end_auth_query)
+                          done(null, unfold(res.rows, query))
+                          release()
+                        })
+                    } catch (err) {
+                      client.query(config.orm.end_auth_query)
+                      done(`query error: ${err}`)
+                      release()
+                    }
+                  } else {
+                    done('Could not receive authentication')
+                    release()
                   }
-                } else {
-                  done('Could not receive authentication')
-                }
-              })
-              .catch(e => done(`authentication error: ${e}`))
+                })
+                .catch(e => {
+                  done(`authentication error: ${e}`)
+                  release()
+                })
+            })
           }
         } else { // public api
-          client.public.query(sql, params)
-            .then(res => {
-              done(null, unfold(res.rows, query))
-            })
-            .catch(e => done(`query error: ${e}`))
+          pool.public((client, release) => {
+            client.query(sql, params)
+              .then(res => {
+                done(null, unfold(res.rows, query))
+                release()
+              })
+              .catch(e => {
+                done(`query error: ${e}`)
+                release()
+              })
+          })
         }
       }
     })

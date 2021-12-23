@@ -5,7 +5,7 @@ let effective_config
 if (args.config) {
   const fs = require('fs')
   effective_config = JSON.parse(fs.readFileSync(args.config))
-  if (effective_config) {
+  if (!effective_config) {
     console.error(`Could not load config from ${args.config}`)
     process.exit(-1)
   }
@@ -68,4 +68,25 @@ if (args['root-spec']) {
   effective_config.api.paths['/'] = args['root-spec']
 }
 
-module.exports = effective_config
+function bindEnvironment (config) {
+  if (typeof config !== 'object') return false
+  for (const prop in config) {
+    if (!Object.prototype.hasOwnProperty.call(config, prop)) continue // take into consideration only object's own properties.
+    const val = config[prop]
+    if (typeof val === 'object') {
+      if (val.ENV) {
+        config[prop] = process.env[val.ENV]
+      } else {
+        bindEnvironment(val)
+      }
+    } else if (val.concat) {
+      // Walk through array
+      for (const el in val) {
+        bindEnvironment(el)
+      }
+    }
+  }
+  return config
+}
+
+module.exports = bindEnvironment(effective_config)
