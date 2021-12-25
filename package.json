@@ -1,18 +1,18 @@
 {
   "name": "restormjs",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "A thin, fast and secure REST service to database objects",
-  "main": "bin/www.js",
+  "main": "bin/restormjs-server.js",
   "scripts": {
     "test": "nyc --reporter=lcov --reporter=text mocha --timeout 20000 --exit --require babel-register ./test",
     "test-lite": "mocha --reporter spec --timeout 10000",
     "lint": "eslint --fix ./bin ./src ./test ./src/provider",
-    "start": "node bin/www.js"
+    "start": "node bin/restormjs-server.js"
   },
   "bin": {
-    "restormjs-server": "./bin/www.js",
-    "restormjs-pg-spec": "./bin/pg2api.js",
-    "restormjs-get-config": "./bin/getconf.js"
+    "restormjs-server": "bin/restormjs-server.js",
+    "restormjs-pg-spec": "bin/restormjs-pg-spec.js",
+    "restormjs-get-config": "bin/restormjs-get-config.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

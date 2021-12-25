@@ -6,12 +6,22 @@ const sinon = require('sinon')
 const fs = require('fs')
 const mockdate = require('mockdate')
 
-describe('pg2api - spec generator tests', function () {
+describe('restormjs-pg-spec - spec generator tests', function () {
   const scenarios = [
     {
       spec: 'product-api-spec.json',
-      argv: ['pg2api.spec', '--auth-role=restormjs'],
+      argv: ['restormjs-pg-spec.spec', '--auth-role=restormjs'],
       queries: [
+        {
+          res: {
+            rows: [{rolename: 'pub'}]
+          }
+        },
+        {
+          res: {
+            rows: [{rolename: 'restormjs'}]
+          }
+        },
         {
           res: {
             rows: [{ table_name: 'customer', column_name: 'id', is_nullable: 'NO', data_type: 'integer', character_octet_length: null, is_pk: '1', has_default: '0' },
@@ -79,8 +89,18 @@ describe('pg2api - spec generator tests', function () {
         }]
     }, {
       spec: 'playground-api-spec.json',
-      argv: ['pg2api.spec', '--pub-role=restormjs', '--api-name=Sample api spec describing playground table'],
+      argv: ['restormjs-pg-spec.spec', '--pub-role=restormjs', '--api-name=Sample api spec describing playground table'],
       queries: [
+        {
+          res: {
+            rows: [{rolename: 'restormjs'}]
+          }
+        },
+        {
+          res: {
+            rows: [{rolename: 'auth'}]
+          }
+        },
         {
           res: {
             rows: [{ table_name: 'playground', column_name: 'equip_id', is_nullable: 'NO', data_type: 'integer', character_octet_length: null, is_pk: '1', has_default: '1' },
@@ -119,8 +139,18 @@ describe('pg2api - spec generator tests', function () {
         }]
     }, {
       spec: 'account-api-spec.json',
-      argv: ['pg2api.spec', '--pub-role=restormjs', '--api-name=Sample API spec describing account and roles relation'],
+      argv: ['restormjs-pg-spec.spec', '--pub-role=restormjs', '--api-name=Sample API spec describing account and roles relation'],
       queries: [
+        {
+          res: {
+            rows: [{rolename: 'restormjs'}]
+          }
+        },
+        {
+          res: {
+            rows: [{rolename: 'auth'}]
+          }
+        },
         {
           res: {
             rows: [{ table_name: 'account_roles', column_name: 'grant_date', is_nullable: 'YES', data_type: 'timestamp without time zone', character_octet_length: null, is_pk: '0', has_default: '0' },
@@ -220,7 +250,7 @@ describe('pg2api - spec generator tests', function () {
       const expected_spec = JSON.parse(fs.readFileSync(`spec/${scenario.spec}`))
       mockdate.set(expected_spec.created)
       scenario.argv['@global'] = true
-      proxyquire('../bin/pg2api', {
+      proxyquire('../bin/restormjs-pg-spec', {
         pg: {
           Client: Client
         },

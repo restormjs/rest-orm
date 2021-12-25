@@ -117,73 +117,129 @@ const column_grants_sql = `
     ${and_tables_in('cp')}
     order by grantee, table_name, column_name, privilege_type`
 
-client.query(metadata_sql, [conf.schema], (err, metadata) => {
-  console.error(err || 'fetched ' + metadata.rows.length + ' columns')
-  if (err || !metadata.rows || !metadata.rows.length) {
+// for public role, get everything public can have access to
+const get_role_membership_sql = `
+  with recursive cte as (
+     select oid from pg_roles where rolname = $1
+     union all
+     select m.roleid
+     from   cte
+     join   pg_auth_members m on m.member = cte.oid
+     )
+  select oid::regrole::text as rolename from cte;`
+
+// for auth role, get all groups sharing auth
+const get_members_of_group = `
+  with recursive cte as (
+     select oid from pg_roles where rolname = $1
+     union all
+     select m.member
+     from   cte
+     join   pg_auth_members m on m.roleid = cte.oid
+     )
+  select oid::regrole::text as rolename from cte;`
+
+client.query(get_role_membership_sql, [conf.pub_role], (err, memberships) => {
+  console.error(err || 'fetched ' + memberships.rows.length + ' pub memberships')
+  if (err || !memberships.rows || !memberships.rows.length) {
     client.end()
   } else {
-    client.query(table_grants_sql, [conf.schema], (err, table_grants) => {
-      console.error(err || 'fetched ' + table_grants.rows.length + ' table grants')
-      if (err || !table_grants.rows || !table_grants.rows.length) {
+    client.query(get_members_of_group, [conf.auth_role], (err, groups) => {
+      console.error(err || 'fetched ' + groups.rows.length + ' auth groups')
+      if (err || !groups.rows || !groups.rows.length) {
         client.end()
       } else {
-        client.query(column_grants_sql, [conf.schema], (err, column_grants) => {
-          console.error(err || 'fetched ' + column_grants.rows.length + ' column grants')
-          if (!err && column_grants.rows && column_grants.rows.length) {
-            const paths = {}
-            const ddls = metadata.rows.reduce(function (rv, x) {
-              (rv[x.table_name] = rv[x.table_name] || []).push(x)
-              return rv
-            }, {})
-            Object.keys(ddls).forEach(function (tn) {
-              const is_protected = isProtected(tn, table_grants.rows, conf.auth_role)
-              const role = is_protected ? conf.auth_role : conf.pub_role
-
-              const fields = {}
-              ddls[tn].forEach(function (c) {
-                const name = c.is_pk === '1' ? 'id' : toFieldName(c.column_name)
-                fields[name] = {
-                  name: name,
-                  type: toFieldType(c.data_type),
-                  required: c.is_nullable === 'NO' && c.has_default !== '1',
-                  column: toDbName(c.column_name),
-                  grants: getFieldGrants(tn, c.column_name, column_grants.rows, role)
-                }
-              })
-              const path = toPath(tn)
-              paths[path] = {
-                name: toName(tn),
-                path: path,
-                auth: is_protected,
-                table: toDbName(tn),
-                schema: conf.schema,
-                grants: getApiGrants(tn, table_grants.rows, role),
-                fields: fields
+        client.query(metadata_sql, [conf.schema], (err, metadata) => {
+          console.error(err || 'fetched ' + metadata.rows.length + ' columns')
+          if (err || !metadata.rows || !metadata.rows.length) {
+            client.end()
+          } else {
+            client.query(table_grants_sql, [conf.schema], (err, table_grants) => {
+              console.error(err || 'fetched ' + table_grants.rows.length + ' table grants')
+              if (err || !table_grants.rows || !table_grants.rows.length) {
+                client.end()
+              } else {
+                client.query(column_grants_sql, [conf.schema], (err, column_grants) => {
+                  console.error(err || 'fetched ' + column_grants.rows.length + ' column grants')
+                  if (err || !column_grants.rows || !column_grants.rows.length) {
+                    client.end()
+                  } else {
+                    generate_spec(memberships.rows.map(m => m.rolename),
+                        groups.rows.map(g => g.rolename),
+                        metadata.rows, table_grants.rows, column_grants.rows)
+                    client.end()
+                  }
+                })
               }
             })
-            const spec = {
-              name: conf.name,
-              version: conf.version,
-              created: new Date(),
-              description: conf.desc,
-              paths: paths
-            }
-            console.error('generated ' + Object.keys(paths).length + ' APIs')
-            if (conf.output) {
-              fs.writeFile(argv.output, JSON.stringify(spec), (err) => {
-                // throws an error, you could also catch it here
-                if (err) throw err
-                // success case, the file was saved
-                console.log(`Saved to file: ${conf.output}`)
-              })
-            } else { console.log(JSON.stringify(spec)) }
           }
-          client.end()
         })
       }
     })
   }
 })
+
+function generate_spec(memberships, groups, metadata, table_grants, column_grants) {
+  const paths = {}
+  const ddls = metadata.reduce(function (rv, x) {
+    (rv[x.table_name] = rv[x.table_name] || []).push(x)
+    return rv
+  }, {})
+  Object.keys(ddls).forEach(function (tn) {
+    const is_protected = isProtected(tn, table_grants, groups)
+    const roles = is_protected ? groups : memberships
+
+    const fields = {}
+    let has_fields = false
+    ddls[tn].forEach(function (c) {
+      const grants = getFieldGrants(tn, c.column_name, column_grants, roles)
+      if (grants && grants.length > 0) {
+        const name = c.is_pk === '1' ? 'id' : toFieldName(c.column_name)
+        fields[name] = {
+          name: name,
+          type: toFieldType(c.data_type),
+          required: c.is_nullable === 'NO' && c.has_default !== '1',
+          column: toDbName(c.column_name),
+          grants: grants
+        }
+        has_fields = true
+      }
+    })
+    if (has_fields) {
+      const grants = getApiGrants(tn, table_grants, roles)
+      if (grants && grants.length > 0) {
+        const path = toPath(tn)
+        paths[path] = {
+          name: toName(tn),
+          path: path,
+          auth: is_protected,
+          table: toDbName(tn),
+          schema: conf.schema,
+          grants: grants,
+          fields: fields
+        }
+      }
+    }
+  })
+  const spec = {
+    name: conf.name,
+    version: conf.version,
+    created: new Date(),
+    description: conf.desc,
+    paths: paths
+  }
+  console.error('generated ' + Object.keys(paths).length + ' APIs')
+  if (conf.output) {
+    fs.writeFile(argv.output, JSON.stringify(spec), (err) => {
+      // throws an error, you could also catch it here
+      if (err) throw err
+      // success case, the file was saved
+      console.log(`Saved to file: ${conf.output}`)
+    })
+  } else {
+    console.log(JSON.stringify(spec))
+  }
+}
 
 function toDbName (n) {
   return n.match(/[A-Z]/) ? '"' + n + '"' : n
@@ -201,17 +257,17 @@ function toPath (n) {
   return pluralizeMaybe(n.toLowerCase())
 }
 
-function isProtected (tn, auth, role) {
+function isProtected (tn, auth, auth_roles) {
   if (auth) {
-    return auth.find(a => a.table_name === tn && a.grantee === role) !== undefined
+    return auth.find(a => a.table_name === tn && auth_roles.includes(a.grantee)) !== undefined
   }
   return false
 }
 
-function getApiGrants (tn, auth, role) {
+function getApiGrants (tn, auth, roles) {
   if (auth) {
     return auth
-      .filter(a => a.table_name === tn && a.grantee === role)
+      .filter(a => a.table_name === tn && roles.includes(a.grantee))
       .map(a => {
         switch (a.privilege_type) {
           case ('INSERT'): return 'C'
@@ -253,8 +309,8 @@ function toFieldName (n) {
   return n.replace(/\.?([A-Z]+)/g, function (x, y) { return '_' + y.toLowerCase() }).replace(/^_/, '')
 }
 
-function getFieldGrants (table, column, all_grants, role) {
-  return all_grants.filter(g => g.grantee === role &&
+function getFieldGrants (table, column, all_grants, roles) {
+  return all_grants.filter(g => roles.includes(g.grantee) &&
       g.table_name === table && g.column_name === column).map(g => {
     switch (g.privilege_type) {
       case ('INSERT'): return 'C'

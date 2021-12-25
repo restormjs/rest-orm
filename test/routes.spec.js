@@ -19,7 +19,7 @@ const URL_BASE = 'http://localhost:3002'
 describe('HTTP queries', function () {
   before(() => {
     mockdate.set(mock_date)
-    server = proxyquire('../bin/www.js', {
+    server = proxyquire('../bin/restormjs-server.js', {
       '../config.json': {
         development: {
           server: {
@@ -30,7 +30,9 @@ describe('HTTP queries', function () {
           },
           api: {
             paths: {
-              '/': './spec/product-api-spec.json'
+              '/': './spec/product-api-spec.json',
+              'acc': './spec/account-api-spec.json',
+              'play': './spec/playground-api-spec.json'
             },
             path_prefix: '/api'
           }

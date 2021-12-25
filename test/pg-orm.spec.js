@@ -33,7 +33,7 @@ const URL_BASE = 'http://localhost:3002'
 describe('Postgresql queries', function () {
   before(() => {
     mockdate.set(mock_date)
-    server = proxyquire('../bin/www.js', {
+    server = proxyquire('../bin/restormjs-server.js', {
       '../config.json': {
         development: {
           server: {
@@ -43,7 +43,8 @@ describe('Postgresql queries', function () {
           },
           api: {
             paths: {
-              '/': './spec/product-api-spec.json'
+              '/': './spec/product-api-spec.json',
+              'acc': './spec/account-api-spec.json'
             },
             path_prefix: '/api'
           },
@@ -67,6 +68,7 @@ describe('Postgresql queries', function () {
       auth_client.query = function (sql, params) {
         ++querySequence
         if (querySequence === 1) {
+          expect(t.pg.public).undefined
           expect(sql).to.equal('authenticate')
           expect(params).to.deep.equal(['12345', 'other-other0-other'])
           return new Promise((resolve) => {
@@ -88,6 +90,16 @@ describe('Postgresql queries', function () {
           })
         }
       }
+      public_client.query = function (sql, params) {
+        ++querySequence
+        expect(t.pg.public).true
+        expect(querySequence).to.equal(1)
+        expect(sql).to.equal(t.pg.sql)
+        expect(params).to.deep.equal(t.pg.params)
+        return new Promise((resolve) => {
+          resolve({ rows: t.response.body })
+        })
+      }
 
       request({
         method: t.args.m,
@@ -105,7 +117,7 @@ describe('Postgresql queries', function () {
           expect(body).to.deep.equal(t.response.body, `Actual body was: ${JSON.stringify(body)}`)
           expect(response).to.be.json
         } else { expect(body).to.be.undefined }
-        expect(querySequence).to.be.equal(3, 'Query sequence')
+        expect(querySequence).to.be.equal((t.pg.public ? 1: 3), 'Query sequence')
         done()
       })
     })

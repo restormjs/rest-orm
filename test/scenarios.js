@@ -3,7 +3,18 @@ const mock_date = '2021-04-01T20:01:02.123Z'
 
 const tests = [{
   args: { m: 'GET', url: '/api/' },
-  response: { status: 200, body: { '/': JSON.parse(fs.readFileSync('spec/product-api-spec.json')) } }
+  response: { status: 200, body: { '/': JSON.parse(fs.readFileSync('spec/product-api-spec.json')),
+      'acc': JSON.parse(fs.readFileSync('spec/account-api-spec.json')),
+      'play': JSON.parse(fs.readFileSync('spec/playground-api-spec.json'))} }
+
+}, {
+  args: { m: 'GET', url: '/api/acc/accounts?email=hello@example.com' },
+  orm: { api: 'accounts', op: 'R', filters: [{ field: 'email', op: 'eq', val: 'hello@example.com' }] },
+  pg: { sql: 'SELECT user_id as id, created_on, email, last_login, password, username FROM public.accounts WHERE email = $1 LIMIT 20 OFFSET 0', params: ['hello@example.com'], public: true },
+  response: { status: 200, body: [{ id: 1, product_name: 'product1' }, { id: 2, product_name: 'product2' }] }
+}, {
+  args: { m: 'GET', url: '/api/products?price=1&product_name=product1&qty=gt=1&qty=lt=10&limit=10&offset=10' },
+  response: { status: 400, body: { message: 'Query exceeded max allowed parameters number', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
 }, {
   args: { m: 'GET', url: '/api/products?price=1&product_name=product1&qty=gt=1&qty=lt=10&limit=10&offset=10' },
   response: { status: 400, body: { message: 'Query exceeded max allowed parameters number', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }

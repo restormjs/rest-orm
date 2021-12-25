@@ -45,7 +45,7 @@ describe('Json configuration validator', function () {
     console.log = (m) => {
       out.push(m)
     }
-    require('../bin/getconf')
+    require('../bin/restormjs-get-config')
     expect(out.length).to.be.equal(1, 'Console output messages')
     const generated = JSON.parse(out[0])
     expect(generated).to.deep.equal(reference, 'Reference configuration')
