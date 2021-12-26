@@ -1,6 +1,6 @@
 {
   "name": "restormjs",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "A thin, fast and secure REST service to database objects",
   "main": "bin/restormjs-server.js",
   "scripts": {
