@@ -3,6 +3,7 @@
 const { Client } = require('pg')
 const argv = require('../src/args')
 const fs = require('fs')
+const pluralize = require('pluralize')
 
 const usage = `
 Generates restormjs api spec from postgres database objects
@@ -164,10 +165,13 @@ client.query(get_role_membership_sql, [conf.pub_role], (err, memberships) => {
                   if (err || !column_grants.rows || !column_grants.rows.length) {
                     client.end()
                   } else {
-                    generate_spec(memberships.rows.map(m => m.rolename),
-                        groups.rows.map(g => g.rolename),
-                        metadata.rows, table_grants.rows, column_grants.rows)
-                    client.end()
+                    try {
+                      generate_spec(memberships.rows.map(m => m.rolename),
+                          groups.rows.map(g => g.rolename),
+                          metadata.rows, table_grants.rows, column_grants.rows)
+                    } finally {
+                      client.end()
+                    }
                   }
                 })
               }
@@ -208,7 +212,11 @@ function generate_spec(memberships, groups, metadata, table_grants, column_grant
     if (has_fields) {
       const grants = getApiGrants(tn, table_grants, roles)
       if (grants && grants.length > 0) {
-        const path = toPath(tn)
+        let path = toPath(tn)
+        if (paths[path]) {
+          // path already exists, try resolving conflict
+          path = resolve_path_conflict(paths, path, fields)
+        }
         paths[path] = {
           name: toName(tn),
           path: path,
@@ -249,12 +257,8 @@ function toName (n) {
   return n.charAt(0).toUpperCase() + n.slice(1)
 }
 
-function pluralizeMaybe (n) {
-  return n.endsWith('s') || n.includes('_') ? n : `${n}s`
-}
-
 function toPath (n) {
-  return pluralizeMaybe(n.toLowerCase())
+  return pluralize.plural(n.replace(/\.?([A-Z]+)/g, function (x, y) { return '_' + y.toLowerCase() }).replace(/^_/, ''))
 }
 
 function isProtected (tn, auth, auth_roles) {
@@ -326,4 +330,31 @@ function and_tables_in (tp) {
   return conf.tables
     ? `AND ${tp}.table_name IN (${conf.tables.map(t => `'${t}'`).join(',')})`
     : ''
+}
+
+function resolve_path_conflict(paths, path, fields) {
+  const conflict = paths[path]
+  // give the original name to path with more fields
+  if (Object.keys(conflict.fields).length < Object.keys(fields).length) {
+    // move conflict under the new path
+    // try using column id as a new path
+    const that_path = `${path}_`
+    if (paths[that_path]) {
+      throw new Error(`Could not resolve conflict for ${paths}, new path also exists: ${that_path}`)
+    } else {
+      paths[that_path] = conflict
+      conflict.path = that_path
+      // conflict resolved, proceed with the existing path
+      return path
+    }
+  } else {
+    const new_path = `${path}_`
+
+    if (paths[new_path]) {
+      throw new Error(`Could not resolve conflict for ${path}, new path also exists: ${new_path}`)
+    } else {
+      // conflict resolved, proceed with the new path
+      return new_path
+    }
+  }
 }

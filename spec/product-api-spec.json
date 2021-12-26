@@ -66,9 +66,9 @@
         }
       }
     },
-    "product_transaction": {
+    "product_transactions": {
       "name": "Product_transaction",
-      "path": "product_transaction",
+      "path": "product_transactions",
       "auth": true,
       "table": "product_transaction",
       "schema": "public",
