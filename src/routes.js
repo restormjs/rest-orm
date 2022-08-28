@@ -39,6 +39,10 @@ router.delete('/*', cors(corsOptions), function (req, res) {
   process(req, res)
 })
 
+router.put('/*', cors(corsOptions), function (req, res) {
+  process(req, res)
+})
+
 router.options('/*', cors(corsOptions), function (req, res) {
   res.end()
 })
@@ -87,8 +91,12 @@ function process (req, res) {
       }
       res.setHeader('Cache-Control', 'no-store')
     }
-    // validate operation
-    query.operation = get_operation(req)
+    // get query operation
+    try {
+      query.operation = get_operation(req)
+    } catch (e) {
+      return error_response(res, 400, e.message)
+    }
 
     // is there a path param
     if (paths.length > i + 1) {
@@ -120,10 +128,7 @@ function process (req, res) {
 
   // Parse all filters
   try {
-    const err = filters.parse(req, query)
-    if (err) {
-      return error_response(res, 400, err)
-    }
+    filters.parse(req, query)
   } catch (e) {
     return error_response(res, 400, e.message)
   }
@@ -152,9 +157,6 @@ function before_create (req, q) {
     return 'json payload is required'
   }
 
-  if (q.filters.length) {
-    return `Create object will not accept any filters: ${q.filters.map(f => f.field)}`
-  }
   const data = q.payload
   const fields = q.api.fields
   const field = Object.keys(fields)

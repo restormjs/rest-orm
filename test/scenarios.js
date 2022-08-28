@@ -126,6 +126,18 @@ const tests = [{
 }, {
   args: { m: 'GET', url: '/api/products?product_name=product1&offset=maybe' },
   response: { status: 400, body: { message: 'Expected positive number for offset', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
+}, {
+  args: { m: 'OPTIONS', url: '/api/products?product_name=product1&offset=maybe' },
+  response: { status: 204 }
+}, {
+  args: { m: 'GET', url: '/api/apples/1' },
+  response: { status: 404, body: { message: 'Not Found', status: 404, timestamp: '2021-04-01T20:01:02.123Z' } }
+}, {
+  args: { m: 'PUT', url: '/api/products/1' },
+  response: { status: 400, body: { message: 'Request method PUT has no mapping to api operation', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
+}, {
+  args: { m: 'GET', url: '/api/products/1?limit=1&limit=1&limit=1&limit=1&limit=1&limit=1&limit=1&limit=1&limit=1&limit=1&limit=1' },
+  response: { status: 400, body: { message: 'Query exceeded max allowed parameters number', status: 400, timestamp: '2021-04-01T20:01:02.123Z' } }
 }]
 
 module.exports.tests = tests
