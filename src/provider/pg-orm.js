@@ -175,6 +175,7 @@ const sql_filter_operation = {
   le: { group: 'where', op: '<=', add: field_val },
   in: { group: 'where', op: 'IN', add: in_val },
   like: { group: 'where', op: 'LIKE', add: field_val },
+  ilike: { group: 'where', op: 'ILIKE', add: field_val },
   offset: { group: 'limit', op: 'OFFSET', add: limit },
   limit: { group: 'limit', op: 'LIMIT', add: limit },
   order_desc: { group: 'order', op: 'DESC', add: order },
@@ -216,6 +217,7 @@ function order (sqlop, q, f, cl) {
 function wrap_val (sqlop, v) {
   switch (sqlop.op) {
     case 'LIKE': return `%${v}%`
+    case 'ILIKE': return `%${v}%`
   }
   return v
 }

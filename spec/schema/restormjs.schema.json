@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://example.com/restormjs.schema.json",
   "title": "RESTORMJS",
   "description": "JSON Schema for RESTORMJS API specification",

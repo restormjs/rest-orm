@@ -39,7 +39,9 @@ router.delete('/*', cors(corsOptions), function (req, res) {
   process(req, res)
 })
 
-router.options('/*', cors(corsOptions))
+router.options('/*', cors(corsOptions),function(req, res) {
+  res.end()
+})
 
 const validators = { C: before_create, R: before_read, U: before_update, D: before_delete }
 

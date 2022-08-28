@@ -1,9 +1,12 @@
-const Ajv = require('ajv')
+// Node.js require:
+const Ajv = require("ajv")
+const addFormats = require("ajv-formats")
+
+const ajv = new Ajv()
+addFormats(ajv)
+
 const expect = require('chai').expect
 const fs = require('fs')
-
-const ajv = new Ajv({ allErrors: true })
-ajv.addMetaSchema(require('ajv/lib/refs/json-schema-draft-06.json'))
 
 let schema
 

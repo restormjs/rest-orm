@@ -55,6 +55,7 @@ function filter_function (op) {
     case 'lt': return field_op_val
     case 'le': return field_op_val
     case 'like': return field_op_val
+    case 'ilike': return field_op_val
     case 'offset': return op_numval
     case 'limit': return limit
     case 'order_desc': return order

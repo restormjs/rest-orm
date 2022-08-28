@@ -106,6 +106,11 @@ const tests = [{
   pg: { sql: 'SELECT id, price, product_name, qty FROM public.product WHERE product_name <= $1 AND qty LIKE $2 LIMIT 30 OFFSET 10 ORDER BY product_name ASC, price ASC', params: ['2', '%product%'] },
   response: { status: 200, body: [{ id: 1, product_name: 'product1' }, { id: 2, product_name: 'product2' }] }
 }, {
+  args: { m: 'GET', url: '/api/products?product_name=le=2&qty=ilike=product&order_asc=product_name,price&offset=10&limit=30' },
+  orm: { api: 'products', op: 'R', filters: [{ field: 'product_name', op: 'le', val: '2' }, { field: 'qty', op: 'ilike', val: 'product' }, { op: 'order_asc', val: ['product_name', 'price'] }, { op: 'offset', val: 10 }, { op: 'limit', val: 30 }] },
+  pg: { sql: 'SELECT id, price, product_name, qty FROM public.product WHERE product_name <= $1 AND qty ILIKE $2 LIMIT 30 OFFSET 10 ORDER BY product_name ASC, price ASC', params: ['2', '%product%'] },
+  response: { status: 200, body: [{ id: 1, product_name: 'product1' }, { id: 2, product_name: 'product2' }] }
+}, {
   args: { m: 'GET', url: '/api/products?limit=300' },
   orm: { api: 'products', op: 'R', filters: [{ op: 'limit', val: 100 }] },
   pg: { sql: 'SELECT id, price, product_name, qty FROM public.product LIMIT 100 OFFSET 0', params: [] },
