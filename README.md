@@ -2,23 +2,18 @@
 [![CodeQL](https://github.com/restormjs/restormjs/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/restormjs/restormjs/actions/workflows/codeql-analysis.yml)
 [![Coverage Status](https://coveralls.io/repos/github/restormjs/restormjs/badge.svg?branch=main)](https://coveralls.io/github/restormjs/restormjs?branch=main)
 
-# restormjs [DRAFT][WIP][BROKEN][WAIT]
-A thin, fast, flexible and secure REST service to database objects.
+# restormjs
+Engineering community is getting closer to consensus about ORM being an antipattern. Why? There are a lot of thoughts on the topic on the internet, but long story short - it makes things messy very quickly from the start. Because applications operate on persisted objects that have to be manually coded by people. It makes code inconsistent and unmaintainable very quickly, both db and client side. ORM does not hide persistence complexity as a top declared benefit, it just delays the moment of truth when the middle layer has to take more control over db. This project is about getting rid of ORM as a concept, once and hopefully forever. What's left? Think of it as a REST query language to a database, simple and straightforward . And how does it help? Because it is honest! It is not going to pretend to hide database complexity, but would help organize the project better, every layer in its place by eliminating customizations in the middle. Why is it secure? Because there is no custom code, all endpoints work generally consistent. It may be security holes per say, but once fixed it would apply to all objects managed by the same code. Why is it flexible? There are good query capabilities, enhanced with full HTTP protocol support. Consistent and reliable. And thin? There is no 'business' logic on a server, use it on the ui where it belongs, or do some pl sql for something deep. Stateless, simple and fast. That's it.
 
-## Problem
-Long story short, the longer the more I realize ORM as an engineering concept is a bad antipattern. Why? It makes things messy, very quickly from the start. Unmaintainable, both db and client side. ORM does not hide persistence complexity, just delays the moment of truth. This project is about getting rid of ORM as a concept, once and hopefully forever.
-What's left? Think of it as a REST query language to a database, straight and simple.
-And how does it help? Because it is honest! It is not going to hide database complexity, but would help organize the project better, every layer in its place by eliminating customizations in the middle. Why is it secure? Because there is no custom code, all endpoints are generally consistent.
-Why is it flexible? There are good query capabilities, enhanced with full HTTP support. Consistent and reliable.
-And thin? There is no 'business' logic on a server, use it on ui where it belongs. Stateless, simple and fast. That's it.
-
+## Problem Statement
+Engineering community is getting closer to consensus about ORM being an antipattern. Why? There are a lot of thoughts on the topic, but long story short - it makes things messy, very quickly from the start, because applications operate on persisted objects that have to be manually coded by people. It makes code inconsistent and unmaintainable very quickly, both db and client side. ORM does not hide persistence complexity as a top declared benefit, it just delays the moment of truth when the middle layer has to take more control over db. This project is about getting rid of ORM as a concept, once and hopefully forever. What's left? Think of it as a REST query language to a database, straight and simple. And how does it help? Because it is honest! It is not going to pretend to hide database complexity, but would help organize the project better, every layer in its place by eliminating customizations in the middle. Why is it secure? Because there is no custom code, all endpoints work generally consistent. It may be security holes per say, but once fixed it would apply to all objects managed by the same code. Why is it flexible? There are good query capabilities, enhanced with full HTTP protocol support. Consistent and reliable. And thin? There is no 'business' logic on a server, use it on the ui where it belongs, or do some pl sql for something deep. Stateless, simple and fast. That's it.
 ## Getting Started
 A few steps to get the first apis fully up and ready:
-1. You'd need to take care of database objects by yourself. Particularly tables and views.
-2. Generate api spec. There is no need to scrape db every startup. Metadata file generated once and would do the trick. It provides a good view over what's exposed via REST.
-3. Start the server. Use it!
+1. You'd need to take care of database objects by yourself. Particularly tables and views. (Ideally there will be tools for managing objects ddl/metadata)
+2. Generate api spec. Api spec is needed to validate requests and prepare queries to db. There is no need to scrape db every startup. Metadata file generated once and would do the trick. It provides a good view over what's exposed via REST.
+3. Start the server.
 
-What's more?
+What's next
 This topic will go through a slow evolution process, as I (and hopefully community) would need advancing features.
 * Security. Services require access control to apis. Database is the one supposed to take care as the last line of defence, however db can't sustain general traffic. So the service is to the rescue. Spec generators can read database access controls and prevalidate requests like if it was a db, but in a more scalable way, because service is stateless. The validation is consistent since there is no engineer intervention to a generated specification (this is important).
 * Monitoring. TBD
@@ -28,7 +23,7 @@ This topic will go through a slow evolution process, as I (and hopefully communi
 ```
 npm install restormjs
 
-# Quick test run, 100% passed
+# Quick test run, 100% should pass
 npm test
 
 # Generate API specification (Use your database)
@@ -51,6 +46,7 @@ curl http://localhost:3002/api
 ## HTTP Queries
 
 ## API Specification
+[API Specification JSON](spec/schema/restormjs.schema.json)
 
 ## Contributing
 

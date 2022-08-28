@@ -14,12 +14,12 @@ describe('restormjs-pg-spec - spec generator tests', function () {
       queries: [
         {
           res: {
-            rows: [{rolename: 'pub'}]
+            rows: [{ rolename: 'pub' }]
           }
         },
         {
           res: {
-            rows: [{rolename: 'restormjs'}]
+            rows: [{ rolename: 'restormjs' }]
           }
         },
         {
@@ -93,12 +93,12 @@ describe('restormjs-pg-spec - spec generator tests', function () {
       queries: [
         {
           res: {
-            rows: [{rolename: 'restormjs'}]
+            rows: [{ rolename: 'restormjs' }]
           }
         },
         {
           res: {
-            rows: [{rolename: 'auth'}]
+            rows: [{ rolename: 'auth' }]
           }
         },
         {
@@ -143,12 +143,12 @@ describe('restormjs-pg-spec - spec generator tests', function () {
       queries: [
         {
           res: {
-            rows: [{rolename: 'restormjs'}]
+            rows: [{ rolename: 'restormjs' }]
           }
         },
         {
           res: {
-            rows: [{rolename: 'auth'}]
+            rows: [{ rolename: 'auth' }]
           }
         },
         {
@@ -252,7 +252,7 @@ describe('restormjs-pg-spec - spec generator tests', function () {
       scenario.argv['@global'] = true
       proxyquire('../bin/restormjs-pg-spec', {
         pg: {
-          Client: Client
+          Client
         },
         '../src/argv': scenario.argv
       })

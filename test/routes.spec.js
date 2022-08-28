@@ -31,8 +31,8 @@ describe('HTTP queries', function () {
           api: {
             paths: {
               '/': './spec/product-api-spec.json',
-              'acc': './spec/account-api-spec.json',
-              'play': './spec/playground-api-spec.json'
+              acc: './spec/account-api-spec.json',
+              play: './spec/playground-api-spec.json'
             },
             path_prefix: '/api'
           }

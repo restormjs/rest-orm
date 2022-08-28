@@ -3,9 +3,14 @@ const mock_date = '2021-04-01T20:01:02.123Z'
 
 const tests = [{
   args: { m: 'GET', url: '/api/' },
-  response: { status: 200, body: { '/': JSON.parse(fs.readFileSync('spec/product-api-spec.json')),
-      'acc': JSON.parse(fs.readFileSync('spec/account-api-spec.json')),
-      'play': JSON.parse(fs.readFileSync('spec/playground-api-spec.json'))} }
+  response: {
+    status: 200,
+    body: {
+      '/': JSON.parse(fs.readFileSync('spec/product-api-spec.json')),
+      acc: JSON.parse(fs.readFileSync('spec/account-api-spec.json')),
+      play: JSON.parse(fs.readFileSync('spec/playground-api-spec.json'))
+    }
+  }
 
 }, {
   args: { m: 'GET', url: '/api/acc/accounts?email=hello@example.com' },

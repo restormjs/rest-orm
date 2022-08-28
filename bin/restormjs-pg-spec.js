@@ -32,7 +32,7 @@ if (argv.help) { argv.usage(usage) }
 
 const schema = argv['db-schema'] ? argv['db-schema'] : 'public'
 const conf = {
-  schema: schema,
+  schema,
   output: argv.output,
   tables: argv['db-tables'] ? argv['db-tables'].split(',') : undefined,
   name: argv['api-name'] ? argv['api-name'] : `${argv['db-name'] ? argv['db-name'] : 'restormjs'}-${schema} APIs`,
@@ -167,8 +167,8 @@ client.query(get_role_membership_sql, [conf.pub_role], (err, memberships) => {
                   } else {
                     try {
                       generate_spec(memberships.rows.map(m => m.rolename),
-                          groups.rows.map(g => g.rolename),
-                          metadata.rows, table_grants.rows, column_grants.rows)
+                        groups.rows.map(g => g.rolename),
+                        metadata.rows, table_grants.rows, column_grants.rows)
                     } finally {
                       client.end()
                     }
@@ -183,7 +183,7 @@ client.query(get_role_membership_sql, [conf.pub_role], (err, memberships) => {
   }
 })
 
-function generate_spec(memberships, groups, metadata, table_grants, column_grants) {
+function generate_spec (memberships, groups, metadata, table_grants, column_grants) {
   const paths = {}
   const ddls = metadata.reduce(function (rv, x) {
     (rv[x.table_name] = rv[x.table_name] || []).push(x)
@@ -200,11 +200,11 @@ function generate_spec(memberships, groups, metadata, table_grants, column_grant
       if (grants && grants.length > 0) {
         const name = c.is_pk === '1' ? 'id' : toFieldName(c.column_name)
         fields[name] = {
-          name: name,
+          name,
           type: toFieldType(c.data_type),
           required: c.is_nullable === 'NO' && c.has_default !== '1',
           column: toDbName(c.column_name),
-          grants: grants
+          grants
         }
         has_fields = true
       }
@@ -219,12 +219,12 @@ function generate_spec(memberships, groups, metadata, table_grants, column_grant
         }
         paths[path] = {
           name: toName(tn),
-          path: path,
+          path,
           auth: is_protected,
           table: toDbName(tn),
           schema: conf.schema,
-          grants: grants,
-          fields: fields
+          grants,
+          fields
         }
       }
     }
@@ -234,7 +234,7 @@ function generate_spec(memberships, groups, metadata, table_grants, column_grant
     version: conf.version,
     created: new Date(),
     description: conf.desc,
-    paths: paths
+    paths
   }
   console.error('generated ' + Object.keys(paths).length + ' APIs')
   if (conf.output) {
@@ -332,7 +332,7 @@ function and_tables_in (tp) {
     : ''
 }
 
-function resolve_path_conflict(paths, path, fields) {
+function resolve_path_conflict (paths, path, fields) {
   const conflict = paths[path]
   // give the original name to path with more fields
   if (Object.keys(conflict.fields).length < Object.keys(fields).length) {

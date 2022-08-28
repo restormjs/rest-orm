@@ -77,7 +77,7 @@ describe('restormjs-pg-spec - command line arguments', function () {
       scenario.in['@global'] = true
       proxyquire('../bin/restormjs-pg-spec', {
         pg: {
-          Client: Client
+          Client
         },
         '../src/argv': scenario.in
       })
@@ -109,7 +109,7 @@ describe('restormjs-pg-spec - command line arguments', function () {
     argv['@global'] = true
     proxyquire('../bin/restormjs-pg-spec', {
       pg: {
-        Client: Client
+        Client
       },
       '../src/argv': argv
     })

@@ -39,7 +39,7 @@ router.delete('/*', cors(corsOptions), function (req, res) {
   process(req, res)
 })
 
-router.options('/*', cors(corsOptions),function(req, res) {
+router.options('/*', cors(corsOptions), function (req, res) {
   res.end()
 })
 
@@ -213,7 +213,7 @@ function get_device (user_agent) {
 function error_response (res, status, message) {
   res.status(status || 500)
   res.send({
-    message: message,
+    message,
     status: status || 500,
     timestamp: new Date()
   })

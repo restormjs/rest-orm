@@ -35,8 +35,8 @@ Object.keys(config.api.filters).forEach(api_op => {
         }
         op_filters[op] = {
           name: op,
-          min: min,
-          max: max,
+          min,
+          max,
           get: filter_function(op)
         }
       }
@@ -77,13 +77,13 @@ function op_numval (fdesc, query, val) {
 }
 
 function field_op_val (fdesc, query, val, field) {
-  return { field: field, op: fdesc.name, val: val }
+  return { field, op: fdesc.name, val }
 }
 
 function field_op_arr (fdesc, query, val, field) {
   // TBD: make double quotes do their difference
   const arr = val.split(',').map(e => e.replace(/^"|"$/g, ''))
-  return { field: field, op: fdesc.name, val: arr }
+  return { field, op: fdesc.name, val: arr }
 }
 
 function order (fdesc, query, val) {

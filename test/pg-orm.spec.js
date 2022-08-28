@@ -44,7 +44,7 @@ describe('Postgresql queries', function () {
           api: {
             paths: {
               '/': './spec/product-api-spec.json',
-              'acc': './spec/account-api-spec.json'
+              acc: './spec/account-api-spec.json'
             },
             path_prefix: '/api'
           },
@@ -117,7 +117,7 @@ describe('Postgresql queries', function () {
           expect(body).to.deep.equal(t.response.body, `Actual body was: ${JSON.stringify(body)}`)
           expect(response).to.be.json
         } else { expect(body).to.be.undefined }
-        expect(querySequence).to.be.equal((t.pg.public ? 1: 3), 'Query sequence')
+        expect(querySequence).to.be.equal((t.pg.public ? 1 : 3), 'Query sequence')
         done()
       })
     })

@@ -26,7 +26,7 @@ app.use(function (err, req, res, next) {
 
   res.send({
     message: err.message,
-    status: status,
+    status,
     details: err.stack, // TODO: Remove from prod
     timestamp: new Date()
   })
